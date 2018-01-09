@@ -28,12 +28,12 @@ python prepro_feats
 
 python prepro_labels
 ```
+2. Training a model
 
-2. train
+To train a model, simply run python train.py -epochs 3001  --batch_size 512 --checkpoint_path save --gpu 0,1
 
-```
-python train.py --epochs 3001  --batch_size 512 --checkpoint_path save --gpu 0,1
-```
+If you already have a model snapshot saved on disk, running ./train.sh will continue training from where it stopped.
+
 
 3. test
 
