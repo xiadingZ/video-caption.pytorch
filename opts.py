@@ -19,6 +19,8 @@ def parse_opt():
                         during self critical training.')
 
     # Model settings
+    parser.add_argument("--model", type=str, default='S2VTModel',
+                        help="with model to use")
     parser.add_argument("--bidirectional", type=int, default=0,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
@@ -26,11 +28,11 @@ def parse_opt():
                         help='size of the decoder hidden layer')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
-    parser.add_argument('--input_dropout_p', type=float, default=0.1,
+    parser.add_argument('--input_dropout', type=float, default=0.1,
                         help='strength of dropout in the Language Model RNN')
-    parser.add_argument('--dropout_p', type=float, default=0.5,
+    parser.add_argument('--rnn_dropout', type=float, default=0.2,
                         help='strength of dropout in the Language Model RNN')
-    parser.add_argument('--dim_word_emb', type=int, default=512,
+    parser.add_argument('--dim_word', type=int, default=512,
                         help='the encoding size of each token in the vocabulary, and the video.')
 
     parser.add_argument('--dim_vid', type=int, default=2048,
@@ -75,7 +77,7 @@ def parse_opt():
 
     # use in eval.py
 
-    parser.add_argument('--model', type=str, default='', help='path to model to evaluate')
+    parser.add_argument('--saved_model', type=str, default='', help='path to saved model to evaluate')
     parser.add_argument('--verbose', type=int, default=1, help='show message')
 
     parser.add_argument('--dump_json', type=int, default=1,

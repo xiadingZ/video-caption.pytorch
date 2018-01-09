@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 import opts
-from models import EncoderRNN, DecoderRNN, Vid2seq
+from models import EncoderRNN, DecoderRNN, Vid2seq, S2VTModel
 from dataloader import VideoDataset
 import misc.utils as utils
 from misc.rewards import init_cider_scorer, get_self_critical_reward
@@ -72,9 +72,13 @@ def main(opt):
     dataloader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
     opt.vocab_size = dataset.vocab_size
     opt.seq_length = dataset.seq_length
-    encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-    decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
-    model = Vid2seq(encoder, decoder).cuda()
+    if opt.model == 'S2VTModel':
+        model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
+                          rnn_dropout=opt.rnn_dropout).cuda()
+    elif opt.model == "Vid2seq":
+        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
+        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
+        model = Vid2seq(encoder, decoder).cuda()
     loss_fn = utils.LanguageModelCriterion()
     rl_loss_fn = utils.RewardCriterion()
     optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)

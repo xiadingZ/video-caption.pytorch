@@ -86,7 +86,7 @@ class TopKDecoder(nn.Module):
         """
         Forward rnn for MAX_LENGTH steps.  Look at :func:`seq2seq.models.DecoderRNN.DecoderRNN.forward_rnn` for details.
         """
-        batch_size, encoder_len, dim_hidden = encoder_outputs.size()
+        batch_size, encoder_len, dim_hidden = encoder_outputs.shape
 
         self.pos_index = Variable(torch.LongTensor(range(batch_size)) * self.k).view(-1, 1)
 

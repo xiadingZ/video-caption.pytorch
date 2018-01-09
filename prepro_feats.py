@@ -60,7 +60,7 @@ def extract_feats(params, model):
             img = preprocess(img)
             images[iImg] = img
         with torch.no_grad():
-            fc_feats = model(Variable(images).cuda())
+            fc_feats = model(Variable(images).cuda()).squeeze()
             img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
         outfile = os.path.join(dir_fc, video_id + '.npy')
@@ -75,17 +75,19 @@ if __name__ == '__main__':
                         help='Set CUDA_VISIBLE_DEVICES environment variable, optional')
     parser.add_argument("--output_dir", dest='output_dir', type=str,
                         default='data/feats/resnet152', help='directory to store features')
+    parser.add_argument("--n_frame_step", dest='n_frame_step', type=int, default=40,
+                        help='how many frames to sampler per video')
 
     parser.add_argument("--video_path", dest='video_path', type=str,
                         default='data/train-video', help='path to video dataset')
     parser.add_argument("--model", dest="model", type=str, default='resnet152',
                         help='the CNN model you want to use to extract_feats')
+    parser.add_argument('--dim_image', dest='dim_image', type=int, default=2048,
+                        help='dim of frames images extracted by cnn model')
 
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     params = vars(args)
-    params['n_frame_step'] = 26
-    params['dim_image'] = 2048
     if params['model'] == 'inception_v3':
         model = inception_v3(pretrained=True).cuda()
     elif params['model'] == 'resnet152':

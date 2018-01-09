@@ -2,6 +2,7 @@ import random
 
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 import torch.nn.functional as F
 
 from .attention import Attention
@@ -97,7 +98,7 @@ class DecoderRNN(nn.Module):
 
         else:
             # <sos> as initial input
-            decoder_input = targets[:, 0].unsqueeze(1)
+            decoder_input = Variable(torch.LongTensor([self.sos_id] * batch_size)).cuda().unsqueeze(1)
             for di in range(self.max_length):
                 decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs)
                 seq_probs.append(decoder_output)

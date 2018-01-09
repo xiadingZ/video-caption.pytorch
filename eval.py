@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from models import EncoderRNN, DecoderRNN, Vid2seq
+from models import EncoderRNN, DecoderRNN, Vid2seq, S2VTModel
 from dataloader import VideoDataset
 import misc.utils as utils
 from misc.cocoeval import suppress_stdout_stderr, COCOScorer
@@ -47,7 +47,6 @@ def test(model, crit, dataset, vocab, opt):
             video_id = 'video' + str(data['ix'][k])
             samples[video_id] = [{'image_id': video_id, 'caption': sent}]
 
-
     with suppress_stdout_stderr():
         valid_score = scorer.score(gts, samples, samples.keys())
     results.append(valid_score)
@@ -66,12 +65,16 @@ def main(opt):
     dataset = VideoDataset(opt)
     opt.vocab_size = dataset.vocab_size
     opt.seq_length = dataset.seq_length
-    encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-    decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
-    model = Vid2seq(encoder, decoder).cuda()
+    if opt.model == 'S2VTModel':
+        model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
+                          rnn_dropout=opt.rnn_dropout).cuda()
+    elif opt.model == "Vid2seq":
+        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
+        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
+        model = Vid2seq(encoder, decoder).cuda()
     model = nn.DataParallel(model)
     # Setup the model
-    model.load_state_dict(torch.load(opt.model))
+    model.load_state_dict(torch.load(opt.saved_model))
     model.eval()
     crit = utils.LanguageModelCriterion()
 
