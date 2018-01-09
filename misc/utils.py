@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 
 
 # Input: seq, N*D numpy array, with element 0 .. vocab_size. 0 is END token.
@@ -48,11 +47,11 @@ class RewardCriterion(nn.Module):
 class LanguageModelCriterion(nn.Module):
 
     def __init__(self):
-        super(LanguageModelCriterion, self).__init__()
+        super().__init__()
 
     def forward(self, logits, target, mask):
         """
-        logits: shape of (N, seq_len, dim_word)
+        logits: shape of (N, seq_len, vocab_size)
         target: shape of (N, seq_len)
         mask: shape of (N, seq_len)
         """

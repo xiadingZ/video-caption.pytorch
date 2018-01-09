@@ -1,5 +1,4 @@
-data/
-feats/
+data/*
 save*/
 results/
 video*/

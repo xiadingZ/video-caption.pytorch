@@ -29,8 +29,6 @@ class EncoderRNN(nn.Module):
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
-        else:
-            raise ValueError("Unsupported RNN Cell: {0}".format(rnn_cell))
 
         self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
                                  batch_first=True, bidirectional=bidirectional, dropout=dropout_p)

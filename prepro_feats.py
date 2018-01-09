@@ -8,9 +8,10 @@ import os
 import argparse
 
 import torch
+from torch import nn
 from models.inception import inception_v3
 from torch.autograd import Variable
-
+import torchvision
 from torchvision import transforms
 
 
@@ -29,17 +30,16 @@ def extract_frames(video, dst):
         subprocess.call(video_to_frames_command, stdout=ffmpeg_log, stderr=ffmpeg_log)
 
 
-def extract_feats(params):
-    C, H, W = 3, 299, 299
+def extract_feats(params, model):
+    C, H, W = 3, 224, 224
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     preprocess = transforms.Compose([
-        transforms.Resize(299),
-        transforms.CenterCrop(299),
+        transforms.Resize(224),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         normalize,
     ])
-    model = inception_v3(pretrained=True).cuda()
 
     dir_fc = params['output_dir']
     if not os.path.isdir(dir_fc):
@@ -60,10 +60,10 @@ def extract_feats(params):
             img = preprocess(img)
             images[iImg] = img
         with torch.no_grad():
-            fc_feats, score, aux_logits = model(Variable(images).cuda())
+            fc_feats = model(Variable(images).cuda())
             img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
-        outfile = os.path.join(dir_fc, video_id + '_incep_v3.npy')
+        outfile = os.path.join(dir_fc, video_id + '.npy')
         np.save(outfile, img_feats)
         # cleanup
         shutil.rmtree(dst)
@@ -74,15 +74,24 @@ if __name__ == '__main__':
     parser.add_argument("--gpu", dest='gpu', type=str, default='0',
                         help='Set CUDA_VISIBLE_DEVICES environment variable, optional')
     parser.add_argument("--output_dir", dest='output_dir', type=str,
-                        default='data/feats/with_norm/', help='directory to store features')
+                        default='data/feats/resnet152', help='directory to store features')
 
     parser.add_argument("--video_path", dest='video_path', type=str,
                         default='data/train-video', help='path to video dataset')
-
+    parser.add_argument("--model", dest="model", type=str, default='resnet152',
+                        help='the CNN model you want to use to extract_feats')
 
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     params = vars(args)
     params['n_frame_step'] = 26
     params['dim_image'] = 2048
-    extract_feats(params)
+    if params['model'] == 'inception_v3':
+        model = inception_v3(pretrained=True).cuda()
+    elif params['model'] == 'resnet152':
+        model = torchvision.models.resnet152(pretrained=True)
+        model = nn.Sequential(*list(model.children())[:-1])
+        model = model.cuda()
+    else:
+        print("doesn't support %s" % (params['model']))
+    extract_feats(params, model)

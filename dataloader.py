@@ -10,9 +10,6 @@ from torch.utils.data import Dataset
 
 class VideoDataset(Dataset):
 
-    def reset_iterator(self, split):
-        self.iterators[split] = 0
-
     def get_vocab_size(self):
         return self.vocab_size
 
@@ -35,14 +32,14 @@ class VideoDataset(Dataset):
         self.splits = self.info['videos']
         print('number of train videos: ', len(self.splits['train']))
         print('number of val videos: ', len(self.splits['val']))
-        print('number of test videos: ', len(self.splits['val']))
+        print('number of test videos: ', len(self.splits['test']))
         # open the hdf5 file
-        print('DataLoader loading h5 file: ',
-              opt.input_fc_dir, opt.input_label_h5)
+        print('DataLoader loading video features: ', opt.feats_dir)
+        print('DataLoader loading h5 file: ', opt.input_label_h5)
         self.h5_label_file = h5py.File(
             self.opt.input_label_h5, 'r', driver='core')
 
-        self.input_fc_dir = self.opt.input_fc_dir
+        self.feats_dir = self.opt.feats_dir
 
         # load in the sequence data
         self.seq_length = self.h5_label_file['labels'].shape[1]
@@ -50,9 +47,6 @@ class VideoDataset(Dataset):
         # load the pointers in full to RAM (should be small enough)
         self.label_start_ix = self.h5_label_file['label_start_ix'][:]
         self.label_end_ix = self.h5_label_file['label_end_ix'][:]
-
-        self.num_videos = self.label_start_ix.shape[0]
-        print('read %d video features' % (self.num_videos))
 
     def __getitem__(self, ix):
         """This function returns a tuple that is further passed to collate_fn
@@ -63,8 +57,8 @@ class VideoDataset(Dataset):
         elif self.mode == 'test':
             ix = ix + len(self.splits['train']) + len(self.splits['val'])
 
-        fc_feat = np.load(os.path.join(self.input_fc_dir,
-                                       'video' + str(ix) + '_incep_v3.npy'))
+        fc_feat = np.load(os.path.join(self.feats_dir,
+                                       'video' + str(ix) + '.npy'))
 
         label = np.zeros([self.seq_length], dtype='int')
         mask = np.zeros([self.seq_length], dtype='float32')
@@ -93,4 +87,4 @@ class VideoDataset(Dataset):
         return data
 
     def __len__(self):
-        return len(self.info['videos'][self.mode])
+        return len(self.splits[self.mode])

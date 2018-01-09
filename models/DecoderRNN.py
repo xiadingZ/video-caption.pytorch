@@ -33,13 +33,15 @@ class DecoderRNN(nn.Module):
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
-        self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers, batch_first=True, dropout=dropout_p)
+        self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
+                                 bidirectional=bidirectional, batch_first=True, dropout=dropout_p)
 
         self.dim_output = vocab_size
         self.dim_hidden = dim_hidden
         self.max_length = max_len
         self.use_attention = use_attention
-
+        self.sos_id = 1
+        self.eos_id = 0
         self.input_dropout = nn.Dropout(input_dropout_p)
         self.embedding = nn.Embedding(self.dim_output, self.dim_hidden)
         if use_attention:

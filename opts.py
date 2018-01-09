@@ -9,7 +9,7 @@ def parse_opt():
     parser.add_argument('--info_json', type=str, default='data/info.json',
                         help='path to the json file containing additional info and vocab')
 
-    parser.add_argument('--input_fc_dir', type=str, default='data/feats/train_fc/',
+    parser.add_argument('--feats_dir', type=str, default='data/feats/train_fc/',
                         help='path to the directory containing the preprocessed fc feats')
     parser.add_argument('--input_label_h5', type=str, default='data/data_label.h5',
                         help='path to the h5file containing the preprocessed dataset')
@@ -19,27 +19,31 @@ def parse_opt():
                         during self critical training.')
 
     # Model settings
+    parser.add_argument("--bidirectional", type=int, default=0,
+                        help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
-    parser.add_argument('--dim_hidden', type=int, default=1300,
+    parser.add_argument('--dim_hidden', type=int, default=1024,
                         help='size of the decoder hidden layer')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
-
-    parser.add_argument('--dim_word_emb', type=int, default=300,
+    parser.add_argument('--input_dropout_p', type=float, default=0.1,
+                        help='strength of dropout in the Language Model RNN')
+    parser.add_argument('--dropout_p', type=float, default=0.5,
+                        help='strength of dropout in the Language Model RNN')
+    parser.add_argument('--dim_word_emb', type=int, default=512,
                         help='the encoding size of each token in the vocabulary, and the video.')
 
     parser.add_argument('--dim_vid', type=int, default=2048,
                         help='2048 for resnet, 4096 for vgg')
 
     # Optimization: General
-    parser.add_argument('--epochs', type=int, default=2000,
+    parser.add_argument('--epochs', type=int, default=2001,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='minibatch size')
     parser.add_argument('--grad_clip', type=float, default=0.1,  # 5.,
                         help='clip gradients at this value')
-    parser.add_argument('--dropout_p', type=float, default=0.5,
-                        help='strength of dropout in the Language Model RNN')
+
     parser.add_argument('--self_crit_after', type=int, default=-1,
                         help='After what epoch do we start finetuning the CNN? \
                         (-1 = disable; never finetune, 0 = finetune from start)')
@@ -65,9 +69,6 @@ def parse_opt():
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--checkpoint_path', type=str, default='save',
                         help='directory to store checkpointed models')
-    parser.add_argument('--language_eval', type=int, default=0,
-                        help='Evaluate language as well (1 = yes, 0 = no)? BLEU/CIDEr/ROUGE_L?\
-                        requires coco-caption code from Github.')
     parser.add_argument('--mode', type=str, default='train', help='train/val/test data to load')
     parser.add_argument('--gpu', type=str, default='0',
                         help='gpu device number')
