@@ -26,7 +26,7 @@ class DecoderRNN(nn.Module):
 
     def __init__(self, vocab_size, max_len, dim_hidden,
                  n_layers=1, rnn_cell='gru', bidirectional=False,
-                 input_dropout_p=0, dropout_p=0, use_attention=False):
+                 input_dropout_p=0, rnn_dropout_p=0, use_attention=False):
         super().__init__()
 
         self.bidirectional_encoder = bidirectional
@@ -35,7 +35,7 @@ class DecoderRNN(nn.Module):
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
         self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
-                                 bidirectional=bidirectional, batch_first=True, dropout=dropout_p)
+                                 bidirectional=bidirectional, batch_first=True, dropout=rnn_dropout_p)
 
         self.dim_output = vocab_size
         self.dim_hidden = dim_hidden

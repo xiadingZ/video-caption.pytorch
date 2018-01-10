@@ -19,9 +19,9 @@ class VideoDataset(Dataset):
     def get_seq_length(self):
         return self.seq_length
 
-    def __init__(self, opt):
+    def __init__(self, opt, mode):
         self.opt = opt
-        self.mode = opt.mode  # to load train/val/test data
+        self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset
         print('DataLoader loading json file: ', opt.input_json)
