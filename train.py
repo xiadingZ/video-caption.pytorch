@@ -65,6 +65,10 @@ def train(dataloader, model, loss_fn, optimizer, lr_scheduler, opt, rl_crit=None
                 checkpoint_path = os.path.join(opt.checkpoint_path, 'model-best.pth')
                 torch.save(model.state_dict(), checkpoint_path)
                 print("model saved to {}".format(checkpoint_path))
+                
+                 # Stop if reaching max epochs
+        if epoch >= opt.max_epochs and opt.max_epochs != -1:
+            break
 
 
 def main(opt):
