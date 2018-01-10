@@ -80,7 +80,7 @@ def main(opt):
         decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
         model = Vid2seq(encoder, decoder).cuda()
     loss_fn = utils.LanguageModelCriterion()
-    rl_loss_fn = utils.RewardCriterion()
+    rl_crit = utils.RewardCriterion()
     optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.learning_rate_decay_every,
                                                  gamma=opt.learning_rate_decay_rate)
