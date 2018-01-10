@@ -1,1 +1,12 @@
-/home/xiading/data/msr_vtt_v2/
+
+First, create the directories ./data and ./model, which will store the training/validation/test vide dataset and the model parameters, respectively.
+
+Second, download the training, validation and test data and store it under ./data (eg., /home/xiading/data/msr_vtt_v2/)
+
+Links to download data- 
+
+ train-video: download link
+ test-video: download link
+ json info of train-video: download link
+ json info of test-video: download link
+    
