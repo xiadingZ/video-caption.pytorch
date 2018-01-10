@@ -39,6 +39,9 @@ def parse_opt():
                         help='2048 for resnet, 4096 for vgg')
 
     # Optimization: General
+    
+    parser.add_argument('--max_epochs', type=int, default=-1,
+    help='number of epochs')
     parser.add_argument('--epochs', type=int, default=2001,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,
