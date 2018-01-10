@@ -36,17 +36,17 @@ def train(dataloader, model, loss_fn, optimizer, lr_scheduler, opt, rl_loss_fn=N
             optimizer.zero_grad()
             if not sc_flag:
                 seq_probs, predicts = model(fc_feats, labels)
-                loss = loss_fn(seq_probs, labels[:, 1:], masks[:, 1:])
+                loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             else:
                 gen_result, sample_logprobs = model.sample(fc_feats, vars(opt))
                 # print(gen_result)
                 reward = get_self_critical_reward(model, fc_feats, data, gen_result)
-                loss = rl_loss_fn(sample_logprobs, gen_result, Variable(
-                    torch.from_numpy(reward).float().cuda()))
+                loss = rl_crit(sample_logprobs, gen_result, Variable(
+                    torch.from_numpy(reward).float().cuda(), requires_grad=False)))
             loss.backward()
             utils.clip_gradient(optimizer, opt.grad_clip)
             optimizer.step()
-            train_loss = loss.data.cpu()[0]
+            train_loss = loss.data[0]
             torch.cuda.synchronize()
             iteration += 1
             if not sc_flag:
@@ -88,6 +88,10 @@ def main(opt):
             os.mkdir(opt.checkpoint_path)
     train(dataloader, model, loss_fn, optimizer, exp_lr_scheduler, opt, rl_loss_fn)
 
+    
+    # Stop if reaching max epochs
+    if epoch >= opt.max_epochs and opt.max_epochs != -1:
+        break
 
 if __name__ == '__main__':
     opt = opts.parse_opt()
