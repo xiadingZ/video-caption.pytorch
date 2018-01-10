@@ -7,16 +7,16 @@ from torch.autograd import Variable
 
 class S2VTModel(nn.Module):
     def __init__(self, vocab_size, max_len, dim_hidden, dim_word, dim_vid=2048, sos_id=1, eos_id=0,
-                 n_layers=1, rnn_cell='gru', rnn_dropout=0.2, use_attention=False):
+                 n_layers=1, rnn_cell='gru', rnn_dropout_p=0.2, use_attention=False):
         super().__init__()
         if rnn_cell.lower() == 'lstm':
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
         self.rnn1 = self.rnn_cell(dim_vid, dim_hidden, n_layers,
-                                  batch_first=True, dropout=rnn_dropout)
+                                  batch_first=True, dropout=rnn_dropout_p)
         self.rnn2 = self.rnn_cell(dim_hidden + dim_word, dim_hidden, n_layers,
-                                  batch_first=True, dropout=rnn_dropout)
+                                  batch_first=True, dropout=rnn_dropout_p)
 
         self.dim_vid = dim_vid
         self.dim_output = vocab_size

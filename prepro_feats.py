@@ -61,6 +61,7 @@ def extract_feats(params, model):
             images[iImg] = img
         with torch.no_grad():
             fc_feats = model(Variable(images).cuda()).squeeze()
+            assert fc_feats.shape[-1] == params['dim_vid'], "extracted features dim doesn't match the opts"
             img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
         outfile = os.path.join(dir_fc, video_id + '.npy')
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                         default='data/train-video', help='path to video dataset')
     parser.add_argument("--model", dest="model", type=str, default='resnet152',
                         help='the CNN model you want to use to extract_feats')
-    parser.add_argument('--dim_image', dest='dim_image', type=int, default=2048,
+    parser.add_argument('--dim_vid', dest='dim_vid', type=int, default=2048,
                         help='dim of frames images extracted by cnn model')
 
     args = parser.parse_args()
