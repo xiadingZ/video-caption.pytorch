@@ -13,7 +13,7 @@ import misc.utils as utils
 from misc.rewards import init_cider_scorer, get_self_critical_reward
 
 
-def train(dataloader, model, loss_fn, optimizer, lr_scheduler, opt, rl_loss_fn=None):
+def train(dataloader, model, loss_fn, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
     model = nn.DataParallel(model)
 
