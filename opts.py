@@ -25,7 +25,7 @@ def parse_opt():
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
     parser.add_argument('--dim_hidden', type=int, default=1024,
-                        help='size of the decoder hidden layer')
+                        help='size of the rnn hidden layer')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
     parser.add_argument('--input_dropout_p', type=float, default=0.1,
@@ -36,13 +36,13 @@ def parse_opt():
                         help='the encoding size of each token in the vocabulary, and the video.')
 
     parser.add_argument('--dim_vid', type=int, default=2048,
-                        help='2048 for resnet, 4096 for vgg')
+                        help='dim of features of video frames')
 
     # Optimization: General
-    
+
     parser.add_argument('--max_epochs', type=int, default=-1,
-    help='number of epochs')
-    parser.add_argument('--epochs', type=int, default=2001,
+                        help='number of epochs')
+    parser.add_argument('--epochs', type=int, default=6001,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='minibatch size')
@@ -74,13 +74,15 @@ def parse_opt():
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--checkpoint_path', type=str, default='save',
                         help='directory to store checkpointed models')
-    parser.add_argument('--mode', type=str, default='train', help='train/val/test data to load')
+    parser.add_argument('--mode', type=str, default='train',
+                        help='train/val/test data to load')
     parser.add_argument('--gpu', type=str, default='0',
                         help='gpu device number')
 
-    # use in eval.py
+    # used in eval.py
 
-    parser.add_argument('--saved_model', type=str, default='', help='path to saved model to evaluate')
+    parser.add_argument('--saved_model', type=str, default='',
+                        help='path to saved model to evaluate')
     parser.add_argument('--verbose', type=int, default=1, help='show message')
 
     parser.add_argument('--dump_json', type=int, default=1,

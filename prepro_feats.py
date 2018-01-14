@@ -17,6 +17,21 @@ from pretrainedmodels import utils
 C, H, W = 3, 224, 224
 
 
+class Model(nn.Module):
+    """used to extract features of images
+    """
+
+    def __init__(self, model, pooling):
+        super(Model, self).__init__()
+        self.model = model
+        self.pooling = pooling
+
+    def forward(self, input):
+        out = self.model.features(input)
+        out = self.pooling(out)
+        return out
+
+
 def extract_frames(video, dst):
     with open(os.devnull, "w") as ffmpeg_log:
         if os.path.exists(dst):
@@ -44,7 +59,7 @@ def extract_feats(params, model, load_image_fn):
     video_list = glob.glob(os.path.join(params['video_path'], '*.mp4'))
     for video in tqdm(video_list):
         video_id = video.split("/")[-1].split(".")[0]
-        dst = video_id
+        dst = params['model'] + '_' + video_id
         extract_frames(video, dst)
 
         image_list = sorted(glob.glob(os.path.join(dst, '*.jpg')))
@@ -57,9 +72,6 @@ def extract_feats(params, model, load_image_fn):
             images[iImg] = img
         with torch.no_grad():
             fc_feats = model(Variable(images).cuda()).squeeze()
-            # temporary patch because of pretrainedmodels bug
-            if params['model'] == 'resnet152':
-                fc_feats = F.avg_pool2d(fc_feats, 7, stride=1).squeeze()
             assert fc_feats.shape[-1] == params['dim_vid'], "extracted features dim doesn't match the opts"
             img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
@@ -92,32 +104,25 @@ if __name__ == '__main__':
         C, H, W = 3, 299, 299
         model = pretrainedmodels.inceptionv3(pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        model = nn.Sequential(
-            model.features, nn.AvgPool2d(8, count_include_pad=False))
-        model = model.cuda()
-        model = model.eval()
+        pooling = nn.AvgPool2d(8, count_include_pad=False)
 
     elif params['model'] == 'resnet152':
+        C, H, W = 3, 224, 224
         model = pretrainedmodels.resnet152(pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        """
-        model = nn.Sequential(
-            model.features, nn.AvgPool2d(7, stride=1))
-        """
-        model = model.cuda()
-        model = model.eval()
-        model = model.features
+        pooling = nn.AvgPool2d(7, stride=1)
 
     elif params['model'] == 'inception_v4':
         C, H, W = 3, 299, 299
         model = pretrainedmodels.inceptionv4(
             num_classes=1000, pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        model = nn.Sequential(
-            model.features, nn.AvgPool2d(8, count_include_pad=False))
-        model = model.cuda()
-        model = model.eval()
+        pooling = nn.AvgPool2d(8, count_include_pad=False)
+
     else:
         print("doesn't support %s" % (params['model']))
 
+    model = Model(model, pooling)
+    model = model.cuda()
+    model = model.eval()
     extract_feats(params, model, load_image_fn)

@@ -2,7 +2,7 @@ data
 feats/
 save*/
 results/
-video*/
+*video*
 *.json
 *.ipynb
 
