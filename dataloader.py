@@ -1,8 +1,9 @@
 import json
-import h5py
-import os
-import numpy as np
+
 import random
+import os
+import h5py
+import numpy as np
 
 import torch
 from torch.utils.data import Dataset
@@ -11,7 +12,7 @@ from torch.utils.data import Dataset
 class VideoDataset(Dataset):
 
     def get_vocab_size(self):
-        return self.vocab_size
+        return len(self.get_vocab())
 
     def get_vocab(self):
         return self.ix_to_word
@@ -20,16 +21,14 @@ class VideoDataset(Dataset):
         return self.seq_length
 
     def __init__(self, opt, mode):
-        self.opt = opt
         self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset
         print('DataLoader loading json file: ', opt.input_json)
-        self.info = json.load(open(self.opt.info_json))
-        self.ix_to_word = self.info['ix_to_word']
-        self.vocab_size = len(self.ix_to_word)
-        print('vocab size is ', self.vocab_size)
-        self.splits = self.info['videos']
+        info = json.load(open(opt.info_json))
+        self.ix_to_word = info['ix_to_word']
+        print('vocab size is ', len(self.ix_to_word))
+        self.splits = info['videos']
         print('number of train videos: ', len(self.splits['train']))
         print('number of val videos: ', len(self.splits['val']))
         print('number of test videos: ', len(self.splits['test']))
@@ -37,9 +36,9 @@ class VideoDataset(Dataset):
         print('DataLoader loading video features: ', opt.feats_dir)
         print('DataLoader loading h5 file: ', opt.input_label_h5)
         self.h5_label_file = h5py.File(
-            self.opt.input_label_h5, 'r', driver='core')
+            opt.input_label_h5, 'r', driver='core')
 
-        self.feats_dir = self.opt.feats_dir
+        self.feats_dir = opt.feats_dir
 
         # load in the sequence data
         self.seq_length = self.h5_label_file['labels'].shape[1]

@@ -56,7 +56,8 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
             else:
                 gen_result, sample_logprobs = model.sample(fc_feats, vars(opt))
                 # print(gen_result)
-                reward = get_self_critical_reward(model, fc_feats, data, gen_result)
+                reward = get_self_critical_reward(
+                    model, fc_feats, data, gen_result)
                 loss = rl_crit(sample_logprobs, gen_result, Variable(
                     torch.from_numpy(reward).float().cuda()))
 
@@ -69,22 +70,27 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
             iteration += 1
 
             if not sc_flag:
-                print("iter %d (epoch %d), train_loss = %.6f" % (iteration, epoch, train_loss))
+                print("iter %d (epoch %d), train_loss = %.6f" %
+                      (iteration, epoch, train_loss))
             else:
                 print("iter %d (epoch %d), avg_reward = %.3f" % (iteration, epoch,
                                                                  np.mean(reward[:, 0])))
 
         # lowest val loss
         best_loss = None
-        if (epoch % opt.save_checkpoint_every == 0):
-            checkpoint_path = os.path.join(opt.checkpoint_path, 'model_%d.pth' % (epoch))
+        if epoch % opt.save_checkpoint_every == 0:
+            checkpoint_path = os.path.join(
+                opt.checkpoint_path, 'model_%d.pth' % (epoch))
             torch.save(model.state_dict(), checkpoint_path)
             print("model saved to %s" % (checkpoint_path))
 
             val_loss = val(val_loader, model, crit)
+            model.train()
             if best_loss is None or val_loss < best_loss:
-                print("(epoch %d), now lowest val loss is %.6f" % (epoch, val_loss))
-                checkpoint_path = os.path.join(opt.checkpoint_path, 'model-best.pth')
+                print("(epoch %d), now lowest val loss is %.6f" %
+                      (epoch, val_loss))
+                checkpoint_path = os.path.join(
+                    opt.checkpoint_path, 'model_best.pth')
                 torch.save(model.state_dict(), checkpoint_path)
                 print("best model saved to %s" % (checkpoint_path))
                 best_loss = val_loss
@@ -96,11 +102,13 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
 
 def main(opt):
     train_dataset = VideoDataset(opt, 'train')
-    train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True)
+    train_dataloader = DataLoader(
+        train_dataset, batch_size=opt.batch_size, shuffle=True)
     opt.vocab_size = train_dataset.vocab_size
     opt.seq_length = train_dataset.seq_length
     val_dataset = VideoDataset(opt, 'val')
-    val_dataloader = DataLoader(val_dataset, batch_size=opt.batch_size, shuffle=True)
+    val_dataloader = DataLoader(
+        val_dataset, batch_size=opt.batch_size, shuffle=True)
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
@@ -111,12 +119,14 @@ def main(opt):
         model = Vid2seq(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()
-    optimizer = optim.Adam(model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
+    optimizer = optim.Adam(
+        model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.learning_rate_decay_every,
                                                  gamma=opt.learning_rate_decay_rate)
     if not os.path.isdir(opt.checkpoint_path):
-            os.mkdir(opt.checkpoint_path)
-    train(train_dataloader, val_dataloader, model, crit, optimizer, exp_lr_scheduler, opt, rl_crit)
+        os.mkdir(opt.checkpoint_path)
+    train(train_dataloader, val_dataloader, model, crit,
+          optimizer, exp_lr_scheduler, opt, rl_crit)
 
 
 if __name__ == '__main__':

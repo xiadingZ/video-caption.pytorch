@@ -9,10 +9,12 @@ import argparse
 
 import torch
 from torch import nn
-from models.inception import inception_v3
+import torch.nn.functional as F
 from torch.autograd import Variable
-import torchvision
-from torchvision import transforms
+import pretrainedmodels
+from pretrainedmodels import utils
+
+C, H, W = 3, 224, 224
 
 
 def extract_frames(video, dst):
@@ -22,24 +24,18 @@ def extract_frames(video, dst):
             shutil.rmtree(dst)
         os.makedirs(dst)
         video_to_frames_command = ["ffmpeg",
-                                   '-y',  # (optional) overwrite output file if it exists
+                                   # (optional) overwrite output file if it exists
+                                   '-y',
                                    '-i', video,  # input file
                                    '-vf', "scale=400:300",  # input file
                                    '-qscale:v', "2",  # quality for JPEG
                                    '{0}/%06d.jpg'.format(dst)]
-        subprocess.call(video_to_frames_command, stdout=ffmpeg_log, stderr=ffmpeg_log)
+        subprocess.call(video_to_frames_command,
+                        stdout=ffmpeg_log, stderr=ffmpeg_log)
 
 
-def extract_feats(params, model):
-    C, H, W = 3, 224, 224
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
-    preprocess = transforms.Compose([
-        transforms.Resize(224),
-        transforms.CenterCrop(224),
-        transforms.ToTensor(),
-        normalize,
-    ])
+def extract_feats(params, model, load_image_fn):
+    global C, H, W
 
     dir_fc = params['output_dir']
     if not os.path.isdir(dir_fc):
@@ -52,15 +48,18 @@ def extract_feats(params, model):
         extract_frames(video, dst)
 
         image_list = sorted(glob.glob(os.path.join(dst, '*.jpg')))
-        samples = np.round(np.linspace(0, len(image_list) - 1, params['n_frame_step']))
+        samples = np.round(np.linspace(
+            0, len(image_list) - 1, params['n_frame_steps']))
         image_list = [image_list[int(sample)] for sample in samples]
         images = torch.zeros((len(image_list), C, H, W))
         for iImg in range(len(image_list)):
-            img = Image.open(image_list[iImg])
-            img = preprocess(img)
+            img = load_image_fn(image_list[iImg])
             images[iImg] = img
         with torch.no_grad():
             fc_feats = model(Variable(images).cuda()).squeeze()
+            # temporary patch because of pretrainedmodels bug
+            if params['model'] == 'resnet152':
+                fc_feats = F.avg_pool2d(fc_feats, 7, stride=1).squeeze()
             assert fc_feats.shape[-1] == params['dim_vid'], "extracted features dim doesn't match the opts"
             img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
@@ -76,7 +75,7 @@ if __name__ == '__main__':
                         help='Set CUDA_VISIBLE_DEVICES environment variable, optional')
     parser.add_argument("--output_dir", dest='output_dir', type=str,
                         default='data/feats/resnet152', help='directory to store features')
-    parser.add_argument("--n_frame_step", dest='n_frame_step', type=int, default=40,
+    parser.add_argument("--n_frame_steps", dest='n_frame_steps', type=int, default=40,
                         help='how many frames to sampler per video')
 
     parser.add_argument("--video_path", dest='video_path', type=str,
@@ -90,11 +89,35 @@ if __name__ == '__main__':
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     params = vars(args)
     if params['model'] == 'inception_v3':
-        model = inception_v3(pretrained=True).cuda()
-    elif params['model'] == 'resnet152':
-        model = torchvision.models.resnet152(pretrained=True)
-        model = nn.Sequential(*list(model.children())[:-1])
+        C, H, W = 3, 299, 299
+        model = pretrainedmodels.inceptionv3(pretrained='imagenet')
+        load_image_fn = utils.LoadTransformImage(model)
+        model = nn.Sequential(
+            model.features, nn.AvgPool2d(8, count_include_pad=False))
         model = model.cuda()
+        model = model.eval()
+
+    elif params['model'] == 'resnet152':
+        model = pretrainedmodels.resnet152(pretrained='imagenet')
+        load_image_fn = utils.LoadTransformImage(model)
+        """
+        model = nn.Sequential(
+            model.features, nn.AvgPool2d(7, stride=1))
+        """
+        model = model.cuda()
+        model = model.eval()
+        model = model.features
+
+    elif params['model'] == 'inception_v4':
+        C, H, W = 3, 299, 299
+        model = pretrainedmodels.inceptionv4(
+            num_classes=1000, pretrained='imagenet')
+        load_image_fn = utils.LoadTransformImage(model)
+        model = nn.Sequential(
+            model.features, nn.AvgPool2d(8, count_include_pad=False))
+        model = model.cuda()
+        model = model.eval()
     else:
         print("doesn't support %s" % (params['model']))
-    extract_feats(params, model)
+
+    extract_feats(params, model, load_image_fn)

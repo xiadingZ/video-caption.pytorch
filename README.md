@@ -5,6 +5,7 @@
 - python3
 - tqmd
 - ffmpeg
+- pretrainedmodels
 - cuda
 
 ## Data

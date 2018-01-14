@@ -18,10 +18,12 @@ def convert_data_to_coco_scorer_format(data_frame):
     gts = {}
     for row in zip(data_frame["caption"], data_frame["video_id"]):
         if row[1] in gts:
-            gts[row[1]].append({'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
+            gts[row[1]].append(
+                {'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
         else:
             gts[row[1]] = []
-            gts[row[1]].append({'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
+            gts[row[1]].append(
+                {'image_id': row[1], 'cap_id': len(gts[row[1]]), 'caption': row[0]})
     return gts
 
 
@@ -38,7 +40,8 @@ def test(model, crit, dataset, vocab, opt):
         labels = Variable(data['labels']).long().cuda()
         with torch.no_grad():
             # forward the model to also get generated samples for each image
-            seq_probs, seq_preds = model(fc_feats, labels, teacher_forcing_ratio=0)
+            seq_probs, seq_preds = model(
+                fc_feats, labels, teacher_forcing_ratio=0)
             print(seq_preds)
 
         sents = utils.decode_sequence(vocab, seq_preds)
@@ -56,21 +59,23 @@ def test(model, crit, dataset, vocab, opt):
         os.makedirs(opt.results_path)
 
     with open(os.path.join(opt.results_path, "scores.txt"), 'a') as scores_table:
-            scores_table.write(json.dumps(results[0]) + "\n")
+        scores_table.write(json.dumps(results[0]) + "\n")
     with open(os.path.join(opt.results_path, opt.model.split("/")[-1].split('.')[0] + ".json"), 'w') as prediction_results:
-        json.dump({"predictions": samples, "scores": valid_score}, prediction_results)
+        json.dump({"predictions": samples, "scores": valid_score},
+                  prediction_results)
 
 
 def main(opt):
-    dataset = VideoDataset(opt)
+    dataset = VideoDataset(opt, 'test')
     opt.vocab_size = dataset.vocab_size
     opt.seq_length = dataset.seq_length
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
-                          rnn_dropout=opt.rnn_dropout).cuda()
+                          rnn_dropout_p=opt.rnn_dropout_p).cuda()
     elif opt.model == "Vid2seq":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True, dropout_p=0.2)
+        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True,
+                             rnn_dropout_p=0.2)
         model = Vid2seq(encoder, decoder).cuda()
     model = nn.DataParallel(model)
     # Setup the model
