@@ -37,7 +37,7 @@ class RewardCriterion(nn.Module):
         reward = to_contiguous(reward).view(-1)
         mask = (seq > 0).float()
         mask = to_contiguous(torch.cat([mask.new(mask.size(0), 1).fill_(1),
-                                       mask[:, :-1]], 1)).view(-1)
+                                        mask[:, :-1]], 1)).view(-1)
         output = - input * reward * mask
         output = torch.sum(output) / torch.sum(mask)
 
@@ -66,11 +66,6 @@ class LanguageModelCriterion(nn.Module):
         loss = loss_fn(logits, target)
         output = torch.sum(loss * mask) / batch_size
         return output
-
-
-def set_lr(optimizer, lr):
-    for group in optimizer.param_groups:
-        group['lr'] = lr
 
 
 def clip_gradient(optimizer, grad_clip):

@@ -34,7 +34,8 @@ def val(dataloader, model, crit):
 def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
     model = nn.DataParallel(model)
-
+    # lowest val loss
+    best_loss = None
     for epoch in range(opt.epochs):
         lr_scheduler.step()
 
@@ -78,7 +79,7 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
                                                                  np.mean(reward[:, 0])))
 
         # lowest val loss
-        best_loss = None
+
         if epoch % opt.save_checkpoint_every == 0:
             checkpoint_path = os.path.join(
                 opt.checkpoint_path, 'model_%d.pth' % (epoch))
