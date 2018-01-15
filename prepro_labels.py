@@ -93,7 +93,7 @@ def main(params):
         video_caption[i['video_id']]['captions'].append(i['caption'])
     # create the vocab
     vocab = build_vocab(video_caption, params)
-    itow = {i + 2: w for i, w in enumerate(vocab)}  # a 1-indexed vocab translation table
+    itow = {i + 2: w for i, w in enumerate(vocab)}
     wtoi = {w: i + 2 for i, w in enumerate(vocab)}  # inverse table
     wtoi['<eos>'] = 0
     itow[0] = '<eos>'

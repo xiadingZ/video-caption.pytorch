@@ -24,16 +24,17 @@ all default options are defined in opt.py, change it for your like
 
     this steps take about 2 hours for msr-vtt datasets
 ```
-python prepro_feats
-
-
+python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50
+```
+```
 python prepro_labels
 ```
 2. Training a model
 
-To train a model, simply run python train.py -epochs 3001  --batch_size 512 --checkpoint_path save --gpu 0,1
-
-If you already have a model snapshot saved on disk, running ./train.sh will continue training from where it stopped.
+    To train a model, simply run
+```
+python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
+```
 
 
 3. test
@@ -41,7 +42,7 @@ If you already have a model snapshot saved on disk, running ./train.sh will cont
     due to the restriction of pytorch `DataParallel`, if you train the model with *n* gpus, you should use *n* gpus to load it.
 
 ```
-python eval.py --mode test --model save/model_1700.pth --gpu 0,1
+python eval.py --mode test --model S2VTAttModel --saved_model data/save7/model_best.pth --gpu 2,3,4 --dim_hidden 1024 --dim_vid 1536 --dim_word 512 --feats_dir data/feats/incepv4
 ```
 
 ## Metrics

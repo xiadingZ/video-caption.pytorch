@@ -40,8 +40,6 @@ def parse_opt():
 
     # Optimization: General
 
-    parser.add_argument('--max_epochs', type=int, default=-1,
-                        help='number of epochs')
     parser.add_argument('--epochs', type=int, default=6001,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,

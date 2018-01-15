@@ -85,7 +85,7 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
             torch.save(model.state_dict(), checkpoint_path)
             print("model saved to %s" % (checkpoint_path))
             val_loss = val(val_loader, model, crit)
-            print("Val loss is: %.6f"%(val_loss))
+            print("Val loss is: %.6f" % (val_loss))
             model.train()
             if best_loss is None or val_loss < best_loss:
                 print("(epoch %d), now lowest val loss is %.6f" %
@@ -95,10 +95,6 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
                 torch.save(model.state_dict(), checkpoint_path)
                 print("best model saved to %s" % (checkpoint_path))
                 best_loss = val_loss
-
-        # Stop if reaching max epochs
-        if epoch >= opt.max_epochs and opt.max_epochs != -1:
-            break
 
 
 def main(opt):

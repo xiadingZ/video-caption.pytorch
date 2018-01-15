@@ -67,14 +67,14 @@ def test(model, crit, dataset, vocab, opt):
 
 def main(opt):
     dataset = VideoDataset(opt, 'test')
-    opt.vocab_size = dataset.vocab_size
+    opt.vocab_size = dataset.get_vocab_size()
     opt.seq_length = dataset.seq_length
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
     elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True,
+        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                              rnn_dropout_p=0.2)
         model = S2VTAttModel(encoder, decoder).cuda()
     model = nn.DataParallel(model)

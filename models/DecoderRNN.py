@@ -79,7 +79,8 @@ class DecoderRNN(nn.Module):
                 if decoder_hidden is None:
                     context = torch.mean(encoder_outputs, dim=1)
                 else:
-                    context = self.attention(decoder_hidden.squeeze(0), encoder_outputs)
+                    context = self.attention(
+                        decoder_hidden.squeeze(0), encoder_outputs)
                 decoder_input = torch.cat(
                     [current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
@@ -94,13 +95,14 @@ class DecoderRNN(nn.Module):
         else:
             # <sos> as initial input
             current_words = Variable(torch.LongTensor(
-                [self.sos_id] * batch_size)).cuda().unsqueeze(1)
+                [self.sos_id] * batch_size)).cuda()
             current_words = self.embedding(current_words)
             for i in range(self.max_length - 1):
                 if decoder_hidden is None:
                     context = torch.mean(encoder_outputs, dim=1)
                 else:
-                    context = self.attention(decoder_hidden, encoder_outputs)
+                    context = self.attention(
+                        decoder_hidden.squeeze(0), encoder_outputs)
                 decoder_input = torch.cat(
                     [current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
