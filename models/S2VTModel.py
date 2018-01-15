@@ -41,7 +41,8 @@ class S2VTModel(nn.Module):
         for i in range(n_frames):
             self.rnn1.flatten_parameters()
             self.rnn2.flatten_parameters()
-            output1, state1 = self.rnn1(vid_feats[:, i, :].unsqueeze(1), state1)
+            output1, state1 = self.rnn1(
+                vid_feats[:, i, :].unsqueeze(1), state1)
             input2 = torch.cat((output1, padding_words), dim=2)
             output2, state2 = self.rnn2(input2, state2)
 
@@ -54,7 +55,8 @@ class S2VTModel(nn.Module):
                 self.rnn1.flatten_parameters()
                 self.rnn2.flatten_parameters()
                 output1, state1 = self.rnn1(padding_frames, state1)
-                input2 = torch.cat((output1, current_words.unsqueeze(1)), dim=2)
+                input2 = torch.cat(
+                    (output1, current_words.unsqueeze(1)), dim=2)
                 output2, state2 = self.rnn2(input2, state2)
                 logits = self.out(output2.squeeze(1))
                 logits = F.log_softmax(logits, dim=1)
@@ -62,12 +64,14 @@ class S2VTModel(nn.Module):
             seq_probs = torch.cat(seq_probs, 1)
 
         else:
-            current_words = self.embedding(Variable(torch.LongTensor([self.sos_id] * batch_size)).cuda())
+            current_words = self.embedding(
+                Variable(torch.LongTensor([self.sos_id] * batch_size)).cuda())
             for i in range(self.max_length - 1):
                 self.rnn1.flatten_parameters()
                 self.rnn2.flatten_parameters()
                 output1, state1 = self.rnn1(padding_frames, state1)
-                input2 = torch.cat((output1, current_words.unsqueeze(1)), dim=2)
+                input2 = torch.cat(
+                    (output1, current_words.unsqueeze(1)), dim=2)
                 output2, state2 = self.rnn2(input2, state2)
                 logits = self.out(output2.squeeze(1))
                 logits = F.log_softmax(logits, dim=1)

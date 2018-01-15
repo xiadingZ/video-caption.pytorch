@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-from .attention import Attention
+from .Attention import Attention
 
 
 class DecoderRNN(nn.Module):
@@ -24,9 +24,9 @@ class DecoderRNN(nn.Module):
 
     """
 
-    def __init__(self, vocab_size, max_len, dim_hidden,
+    def __init__(self, vocab_size, max_len, dim_hidden, dim_word,
                  n_layers=1, rnn_cell='gru', bidirectional=False,
-                 input_dropout_p=0, rnn_dropout_p=0, use_attention=False):
+                 input_dropout_p=0, rnn_dropout_p=0.1):
         super().__init__()
 
         self.bidirectional_encoder = bidirectional
@@ -34,37 +34,20 @@ class DecoderRNN(nn.Module):
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
-        self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
+        self.rnn = self.rnn_cell(dim_hidden + dim_word, dim_hidden, n_layers,
                                  bidirectional=bidirectional, batch_first=True, dropout=rnn_dropout_p)
 
         self.dim_output = vocab_size
         self.dim_hidden = dim_hidden
+        self.dim_word = dim_word
         self.max_length = max_len
-        self.use_attention = use_attention
         self.sos_id = 1
         self.eos_id = 0
         self.input_dropout = nn.Dropout(input_dropout_p)
-        self.embedding = nn.Embedding(self.dim_output, self.dim_hidden)
-        if use_attention:
-            self.attention = Attention(self.dim_hidden)
+        self.embedding = nn.Embedding(self.dim_output, dim_word)
+        self.attention = Attention(dim_hidden)
 
-        self.out = nn.Linear(self.dim_hidden, self.dim_output)
-
-    def forward_step(self, input_var, hidden, encoder_outputs):
-        batch_size = input_var.size(0)
-        seq_len = input_var.size(1)
-        embedded = self.embedding(input_var)
-        embedded = self.input_dropout(embedded)
-        self.rnn.flatten_parameters()
-        output, hidden = self.rnn(embedded, hidden)
-
-        attn = None
-        if self.use_attention:
-            output, attn = self.attention(output, encoder_outputs)
-
-        logits = self.out(output.view(-1, self.dim_hidden))
-        predicted_softmax = F.log_softmax(logits, dim=1).view(batch_size, seq_len, -1)
-        return predicted_softmax, hidden, attn
+        self.out = nn.Linear(dim_hidden, self.dim_output)
 
     def forward(self, encoder_outputs, encoder_hidden, targets=None, teacher_forcing_ratio=1):
         """
@@ -77,10 +60,10 @@ class DecoderRNN(nn.Module):
         - **teacher_forcing_ratio** (float): The probability that teacher forcing will be used.
 
         Outputs: seq_probs,
-        - **seq_probs** (batch_size, max_length, vocab_size): tensors  containing the outputs of the decoding function.
+        - **seq_probs** (batch_size, max_length, vocab_size): tensors containing the outputs of the decoding function.
         - **seq_preds** (batch_size, max_length): predicted symbols
         """
-        batch_size, encoder_len, dim_hidden = encoder_outputs.size()
+        batch_size, _, _ = encoder_outputs.size()
         decoder_hidden = self._init_state(encoder_hidden)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
@@ -88,25 +71,48 @@ class DecoderRNN(nn.Module):
         seq_probs = []
         seq_preds = []
 
-        # Manual unrolling is used to support random teacher forcing.
-        # If teacher_forcing_ratio is True or False instead of a probability, the unrolling can be done in graph
+        decoder_hidden = None
         if use_teacher_forcing:
             # use targets as rnn inputs
-            decoder_input = targets[:, :-1]
-            decoder_output, decoder_hidden, attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs)
-            seq_probs = decoder_output
+            for i in range(self.max_length - 1):
+                current_words = self.embedding(targets[:, i])
+                if decoder_hidden is None:
+                    context = torch.mean(encoder_outputs, dim=1)
+                else:
+                    context = self.attention(decoder_hidden.squeeze(0), encoder_outputs)
+                decoder_input = torch.cat(
+                    [current_words, context], dim=1)
+                decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
+                self.rnn.flatten_parameters()
+                decoder_output, decoder_hidden = self.rnn(
+                    decoder_input, decoder_hidden)
+                logits = self.out(decoder_output.squeeze(1))
+                logits = F.log_softmax(logits, dim=1)
+                seq_probs.append(logits.unsqueeze(1))
+            seq_probs = torch.cat(seq_probs, 1)
 
         else:
             # <sos> as initial input
-            decoder_input = Variable(torch.LongTensor([self.sos_id] * batch_size)).cuda().unsqueeze(1)
-            for di in range(self.max_length):
-                decoder_output, decoder_hidden, step_attn = self.forward_step(decoder_input, decoder_hidden, encoder_outputs)
-                seq_probs.append(decoder_output)
-                step_output = decoder_output.squeeze(1)
-                _, symbols = torch.max(step_output, 1)
-                symbols = symbols.unsqueeze(1)
-                seq_preds.append(symbols)
-                decoder_input = symbols
+            current_words = Variable(torch.LongTensor(
+                [self.sos_id] * batch_size)).cuda().unsqueeze(1)
+            current_words = self.embedding(current_words)
+            for i in range(self.max_length - 1):
+                if decoder_hidden is None:
+                    context = torch.mean(encoder_outputs, dim=1)
+                else:
+                    context = self.attention(decoder_hidden, encoder_outputs)
+                decoder_input = torch.cat(
+                    [current_words, context], dim=1)
+                decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
+                self.rnn.flatten_parameters()
+                decoder_output, decoder_hidden = self.rnn(
+                    decoder_input, decoder_hidden)
+                logits = self.out(decoder_output.squeeze(1))
+                logits = F.log_softmax(logits, dim=1)
+                seq_probs.append(logits.unsqueeze(1))
+                _, preds = torch.max(logits, 1)
+                current_words = self.embedding(preds)
+                seq_preds.append(preds.unsqueeze(1))
             seq_probs = torch.cat(seq_probs, 1)
             seq_preds = torch.cat(seq_preds, 1)
 
@@ -117,7 +123,8 @@ class DecoderRNN(nn.Module):
         if encoder_hidden is None:
             return None
         if isinstance(encoder_hidden, tuple):
-            encoder_hidden = tuple([self._cat_directions(h) for h in encoder_hidden])
+            encoder_hidden = tuple([self._cat_directions(h)
+                                    for h in encoder_hidden])
         else:
             encoder_hidden = self._cat_directions(encoder_hidden)
         return encoder_hidden

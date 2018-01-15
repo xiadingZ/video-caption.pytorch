@@ -6,7 +6,7 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from models import EncoderRNN, DecoderRNN, Vid2seq, S2VTModel
+from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
 from dataloader import VideoDataset
 import misc.utils as utils
 from misc.cocoeval import suppress_stdout_stderr, COCOScorer
@@ -72,11 +72,11 @@ def main(opt):
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
-    elif opt.model == "Vid2seq":
+    elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
         decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, use_attention=True,
                              rnn_dropout_p=0.2)
-        model = Vid2seq(encoder, decoder).cuda()
+        model = S2VTAttModel(encoder, decoder).cuda()
     model = nn.DataParallel(model)
     # Setup the model
     model.load_state_dict(torch.load(opt.saved_model))

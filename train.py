@@ -5,9 +5,10 @@ from torch import nn
 import torch.optim as optim
 import numpy as np
 import os
+import json
 
 import opts
-from models import EncoderRNN, DecoderRNN, Vid2seq, S2VTModel
+from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
 from dataloader import VideoDataset
 import misc.utils as utils
 from misc.rewards import init_cider_scorer, get_self_critical_reward
@@ -83,8 +84,8 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
                 opt.checkpoint_path, 'model_%d.pth' % (epoch))
             torch.save(model.state_dict(), checkpoint_path)
             print("model saved to %s" % (checkpoint_path))
-
             val_loss = val(val_loader, model, crit)
+            print("Val loss is: %.6f"%(val_loss))
             model.train()
             if best_loss is None or val_loss < best_loss:
                 print("(epoch %d), now lowest val loss is %.6f" %
@@ -104,19 +105,19 @@ def main(opt):
     train_dataset = VideoDataset(opt, 'train')
     train_dataloader = DataLoader(
         train_dataset, batch_size=opt.batch_size, shuffle=True)
-    opt.vocab_size = train_dataset.vocab_size
+    opt.vocab_size = train_dataset.get_vocab_size()
     opt.seq_length = train_dataset.seq_length
     val_dataset = VideoDataset(opt, 'val')
     val_dataloader = DataLoader(
-        val_dataset, batch_size=opt.batch_size, shuffle=True)
+        val_dataset, batch_size=120, shuffle=True)
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
-    elif opt.model == "Vid2seq":
+    elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden,
-                             use_attention=True, rnn_dropout_p=opt.rnn_dropout_p)
-        model = Vid2seq(encoder, decoder).cuda()
+        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
+                             rnn_dropout_p=opt.rnn_dropout_p)
+        model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()
     optimizer = optim.Adam(
@@ -132,4 +133,6 @@ def main(opt):
 if __name__ == '__main__':
     opt = opts.parse_opt()
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+    with open(os.path.join(opt.checkpoint_path, 'opt_info.json'), 'w') as f:
+        json.dump(vars(opt), f)
     main(opt)

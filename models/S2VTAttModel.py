@@ -1,7 +1,7 @@
 import torch.nn as nn
 
 
-class Vid2seq(nn.Module):
+class S2VTAttModel(nn.Module):
     def __init__(self, encoder, decoder):
         """
 
@@ -12,10 +12,6 @@ class Vid2seq(nn.Module):
         super().__init__()
         self.encoder = encoder
         self.decoder = decoder
-
-    def flatten_parameters(self):
-        self.encoder.rnn.flatten_parameters()
-        self.decoder.rnn.flatten_parameters()
 
     def forward(self, vid_feats, target_variable=None,
                 teacher_forcing_ratio=1):
