@@ -33,7 +33,7 @@ python prepro_labels
 
     To train a model, simply run
 ```
-python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
+python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout_p 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
 ```
 
 
