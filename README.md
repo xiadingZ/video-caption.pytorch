@@ -5,7 +5,9 @@
 - pytorch (compiled from master, 0.4.0)
 - python3
 - ffmpeg
-- tqmd
+### python packages
+
+- tqdm
 - pillow
 - pretrainedmodels
 - nltk
