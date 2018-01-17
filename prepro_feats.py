@@ -16,21 +16,6 @@ from pretrainedmodels import utils
 C, H, W = 3, 224, 224
 
 
-class Model(nn.Module):
-    """used to extract features of images
-    """
-
-    def __init__(self, model, pooling):
-        super(Model, self).__init__()
-        self.model = model
-        self.pooling = pooling
-
-    def forward(self, input):
-        out = self.model.features(input)
-        out = self.pooling(out)
-        return out
-
-
 def extract_frames(video, dst):
     with open(os.devnull, "w") as ffmpeg_log:
         if os.path.exists(dst):
