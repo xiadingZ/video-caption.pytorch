@@ -62,8 +62,6 @@ python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path dat
 
 3. test
 
-    due to the restriction of pytorch `DataParallel`, if you train the model with *n* gpus, you should use *n* gpus to load it.
-
 ```
 python eval.py --mode test --model S2VTAttModel --saved_model data/save7/model_best.pth --gpu 2,3,4 --dim_hidden 1024 --dim_vid 1536 --dim_word 512 --feats_dir data/feats/incepv4
 ```
