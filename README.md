@@ -1,14 +1,14 @@
 # pytorch implementation of video captioning
 
 ## requirements
+- cuda
 - pytorch (compiled from master, 0.4.0)
 - python3
-- tqmd
 - ffmpeg
+- tqmd
 - pillow
 - pretrainedmodels
 - nltk
-- cuda
 
 
 ## Data
