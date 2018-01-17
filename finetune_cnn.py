@@ -109,13 +109,13 @@ if __name__ == '__main__':
     parser.add_argument('--dim_image', dest='dim_vid', type=int, default=1536,
                         help='dim of frames images extracted by cnn model')
 
-    parser.add_argument('--save_checkpoint_every', type=int, default=50,
+    parser.add_argument('--save_checkpoint_every', type=int, default=20,
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--learning_rate', type=float, default=4e-4,
                         help='learning rate')
 
-    parser.add_argument('--learning_rate_decay_every', type=int, default=200,
+    parser.add_argument('--learning_rate_decay_every', type=int, default=20,
                         help='every how many iterations thereafter to drop LR?(in epoch)')
     parser.add_argument('--learning_rate_decay_rate', type=float, default=0.8)
     parser.add_argument('--optim_alpha', type=float, default=0.9,

@@ -66,7 +66,7 @@ def test(model, crit, dataset, vocab, opt):
 
 
 def main(opt):
-    dataset = VideoDataset(opt, 'test')
+    dataset = VideoDataset(opt, opt.mode)
     opt.vocab_size = dataset.get_vocab_size()
     opt.seq_length = dataset.seq_length
     if opt.model == 'S2VTModel':
