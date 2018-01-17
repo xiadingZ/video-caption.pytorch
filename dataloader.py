@@ -4,9 +4,27 @@ import random
 import os
 import h5py
 import numpy as np
-
 import torch
 from torch.utils.data import Dataset
+
+
+class CocoDataset(Dataset):
+    def __init__(self, coco_labels):
+        super().__init__()
+        self.coco_labels = list(coco_labels['labels'].items())
+        self.num_classes = coco_labels['num_classes']
+
+    def __getitem__(self, ix):
+        labels = torch.zeros(self.num_classes)
+        image_id, labels_ids = self.coco_labels[ix]
+        labels[labels_ids] = 1
+        data = {}
+        data['image_ids'] = image_id
+        data['labels'] = labels
+        return data
+
+    def __len__(self):
+        return len(self.coco_labels)
 
 
 class VideoDataset(Dataset):
@@ -21,6 +39,7 @@ class VideoDataset(Dataset):
         return self.seq_length
 
     def __init__(self, opt, mode):
+        super().__init__()
         self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset
@@ -73,7 +92,8 @@ class VideoDataset(Dataset):
         mask[:nonzero_ixs.max() + 2] = 1
 
         # Used for reward evaluation
-        gts = self.h5_label_file['labels'][self.label_start_ix[ix]: self.label_end_ix[ix] + 1]
+        gts = self.h5_label_file['labels'][self.label_start_ix[ix]
+            : self.label_end_ix[ix] + 1]
 
         # generate mask
 

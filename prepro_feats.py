@@ -3,7 +3,6 @@ import subprocess
 import glob
 from tqdm import tqdm
 import numpy as np
-from PIL import Image
 import os
 import argparse
 
@@ -94,6 +93,8 @@ if __name__ == '__main__':
                         default='data/train-video', help='path to video dataset')
     parser.add_argument("--model", dest="model", type=str, default='resnet152',
                         help='the CNN model you want to use to extract_feats')
+    parser.add_argument("--saved_model", dest="saved_model", type=str, default='',
+                        help='the pretrained CNN model you want to use to extract_feats')
     parser.add_argument('--dim_vid', dest='dim_vid', type=int, default=2048,
                         help='dim of frames images extracted by cnn model')
 
@@ -104,25 +105,25 @@ if __name__ == '__main__':
         C, H, W = 3, 299, 299
         model = pretrainedmodels.inceptionv3(pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        pooling = nn.AvgPool2d(8, count_include_pad=False)
 
     elif params['model'] == 'resnet152':
         C, H, W = 3, 224, 224
         model = pretrainedmodels.resnet152(pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        pooling = nn.AvgPool2d(7, stride=1)
 
     elif params['model'] == 'inception_v4':
         C, H, W = 3, 299, 299
         model = pretrainedmodels.inceptionv4(
             num_classes=1000, pretrained='imagenet')
         load_image_fn = utils.LoadTransformImage(model)
-        pooling = nn.AvgPool2d(8, count_include_pad=False)
 
     else:
         print("doesn't support %s" % (params['model']))
 
-    model = Model(model, pooling)
+    model.last_linear = utils.Identity()
+    model = nn.DataParallel(model)
+    if params['saved_model'] != '':
+        model.load_state_dict(torch.load(params['saved_model']), strict=False)
     model = model.cuda()
     model = model.eval()
     extract_feats(params, model, load_image_fn)
