@@ -1,11 +1,11 @@
+import os
+import json
 import torch
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch import nn
 import torch.optim as optim
 import numpy as np
-import os
-import json
 
 import opts
 from models import EncoderRNN, DecoderRNN, S2VTAttModel, S2VTModel
@@ -23,7 +23,7 @@ def val(dataloader, model, crit):
         fc_feats = Variable(data['fc_feats']).cuda()
         labels = Variable(data['labels']).long().cuda()
         masks = Variable(data['masks']).cuda()
-        seq_probs, predicts = model(fc_feats, labels)
+        seq_probs, _ = model(fc_feats, labels)
         loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
         val_loss = loss.data[0]
         losses.append(val_loss)
@@ -53,14 +53,14 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
             labels = Variable(data['labels']).long().cuda()
             masks = Variable(data['masks']).cuda()
             if not sc_flag:
-                seq_probs, predicts = model(fc_feats, labels)
+                seq_probs, _ = model(fc_feats, labels)
                 loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             else:
-                gen_result, sample_logprobs = model.sample(fc_feats, vars(opt))
+                seq_probs, seq_preds = model(fc_feats)
                 # print(gen_result)
                 reward = get_self_critical_reward(
-                    model, fc_feats, data, gen_result)
-                loss = rl_crit(sample_logprobs, gen_result, Variable(
+                    model, fc_feats, data, seq_preds)
+                loss = rl_crit(seq_probs, seq_preds, Variable(
                     torch.from_numpy(reward).float().cuda()))
 
             optimizer.zero_grad()
@@ -103,16 +103,15 @@ def main(opt):
     train_dataloader = DataLoader(
         train_dataset, batch_size=opt.batch_size, shuffle=True)
     opt.vocab_size = train_dataset.get_vocab_size()
-    opt.seq_length = train_dataset.seq_length
     val_dataset = VideoDataset(opt, 'val')
     val_dataloader = DataLoader(
         val_dataset, batch_size=120, shuffle=True)
     if opt.model == 'S2VTModel':
-        model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
+        model = S2VTModel(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
     elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
+        decoder = DecoderRNN(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
                              rnn_dropout_p=opt.rnn_dropout_p)
         model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
@@ -121,8 +120,7 @@ def main(opt):
         model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.learning_rate_decay_every,
                                                  gamma=opt.learning_rate_decay_rate)
-    if not os.path.isdir(opt.checkpoint_path):
-        os.mkdir(opt.checkpoint_path)
+
     train(train_dataloader, val_dataloader, model, crit,
           optimizer, exp_lr_scheduler, opt, rl_crit)
 
@@ -130,6 +128,10 @@ def main(opt):
 if __name__ == '__main__':
     opt = opts.parse_opt()
     os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
-    with open(os.path.join(opt.checkpoint_path, 'opt_info.json'), 'w') as f:
+    opt_json = os.path.join(opt.checkpoint_path, 'opt_info.json')
+    if not os.path.isdir(opt.checkpoint_path):
+        os.mkdir(opt.checkpoint_path)
+    with open(opt_json, 'w') as f:
         json.dump(vars(opt), f)
+    print('save opt details to %s' % (opt_json))
     main(opt)

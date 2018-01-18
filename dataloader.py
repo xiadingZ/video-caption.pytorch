@@ -2,7 +2,6 @@ import json
 
 import random
 import os
-import h5py
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -43,28 +42,21 @@ class VideoDataset(Dataset):
         self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset
-        print('DataLoader loading json file: ', opt.input_json)
+        self.captions = json.load(open(opt.caption_json))
         info = json.load(open(opt.info_json))
         self.ix_to_word = info['ix_to_word']
+        self.word_to_ix = info['word_to_ix']
         print('vocab size is ', len(self.ix_to_word))
         self.splits = info['videos']
         print('number of train videos: ', len(self.splits['train']))
         print('number of val videos: ', len(self.splits['val']))
         print('number of test videos: ', len(self.splits['test']))
-        # open the hdf5 file
-        print('DataLoader loading video features: ', opt.feats_dir)
-        print('DataLoader loading h5 file: ', opt.input_label_h5)
-        self.h5_label_file = h5py.File(
-            opt.input_label_h5, 'r', driver='core')
 
         self.feats_dir = opt.feats_dir
-
+        print('load feats from %s' % (self.feats_dir))
         # load in the sequence data
-        self.seq_length = self.h5_label_file['labels'].shape[1]
-        print('max sequence length in data is', self.seq_length)
-        # load the pointers in full to RAM (should be small enough)
-        self.label_start_ix = self.h5_label_file['label_start_ix'][:]
-        self.label_end_ix = self.h5_label_file['label_end_ix'][:]
+        self.max_len = opt.max_len
+        print('max sequence length in data is', self.max_len)
 
     def __getitem__(self, ix):
         """This function returns a tuple that is further passed to collate_fn
@@ -78,31 +70,26 @@ class VideoDataset(Dataset):
         fc_feat = np.load(os.path.join(self.feats_dir,
                                        'video' + str(ix) + '.npy'))
 
-        label = np.zeros([self.seq_length], dtype='int')
-        mask = np.zeros([self.seq_length], dtype='float32')
-
-        # fetch the sequence labels
-        ix1 = self.label_start_ix[ix]
-        ix2 = self.label_end_ix[ix]
+        label = np.zeros([self.max_len], dtype='int')
+        mask = np.zeros([self.max_len], dtype='float32')
+        captions = self.captions['video' + str(ix)]['final_captions']
         # random select a caption for this video
-        ixl = random.randint(ix1, ix2)
-        label = self.h5_label_file['labels'][ixl]
-
-        nonzero_ixs = np.nonzero(label)[0]
-        mask[:nonzero_ixs.max() + 2] = 1
-
-        # Used for reward evaluation
-        gts = self.h5_label_file['labels'][self.label_start_ix[ix]
-            : self.label_end_ix[ix] + 1]
+        cap_ix = random.randint(0, len(captions) - 1)
+        cap = captions[cap_ix]
+        if len(cap) > 28:
+            cap = cap[:28]
+            cap[-1] = '<eos>'
+        for i in range(len(cap)):
+            label[i] = self.word_to_ix[cap[i]]
+            mask[i] = 1
 
         # generate mask
 
         data = {}
         data['fc_feats'] = torch.from_numpy(fc_feat)
         data['labels'] = torch.from_numpy(label)
-        data['gts'] = torch.from_numpy(gts)
         data['masks'] = torch.from_numpy(mask)
-        data['ix'] = ix
+        data['video_id'] = 'video' + str(ix)
         return data
 
     def __len__(self):

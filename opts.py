@@ -8,6 +8,8 @@ def parse_opt():
                         help='path to the json file containing video info')
     parser.add_argument('--info_json', type=str, default='data/info.json',
                         help='path to the json file containing additional info and vocab')
+    parser.add_argument('--caption_json', type=str, default='data/caption.json',
+                        help='path to the processed video caption json')
 
     parser.add_argument('--feats_dir', type=str, default='data/feats/train_fc/',
                         help='path to the directory containing the preprocessed fc feats')
@@ -21,6 +23,8 @@ def parse_opt():
     # Model settings
     parser.add_argument("--model", type=str, default='S2VTModel',
                         help="with model to use")
+
+    parser.add_argument("--max_len", type=int, default=28, help='max length of captions(containing <sos>,<eos>)')
     parser.add_argument("--bidirectional", type=int, default=0,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
