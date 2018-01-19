@@ -2,7 +2,7 @@ import torch.nn as nn
 
 
 class EncoderRNN(nn.Module):
-    def __init__(self, dim_vid, dim_hidden, input_dropout_p=0, dropout_p=0,
+    def __init__(self, dim_vid, dim_hidden, input_dropout_p=0.2, rnn_dropout_p=0.5,
                  n_layers=1, bidirectional=False, rnn_cell='gru'):
         """
 
@@ -17,7 +17,7 @@ class EncoderRNN(nn.Module):
         self.dim_vid = dim_vid
         self.dim_hidden = dim_hidden
         self.input_dropout_p = input_dropout_p
-        self.dropout_p = dropout_p
+        self.rnn_dropout_p = rnn_dropout_p
         self.n_layers = n_layers
         self.bidirectional = bidirectional
         self.rnn_cell = rnn_cell
@@ -30,8 +30,8 @@ class EncoderRNN(nn.Module):
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
 
-        self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
-                                 batch_first=True, bidirectional=bidirectional, dropout=dropout_p)
+        self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers, batch_first=True,
+                                bidirectional=bidirectional, dropout=self.rnn_dropout_p)
 
         self._init_hidden()
 

@@ -13,8 +13,6 @@ def parse_opt():
 
     parser.add_argument('--feats_dir', type=str, default='data/feats/train_fc/',
                         help='path to the directory containing the preprocessed fc feats')
-    parser.add_argument('--input_label_h5', type=str, default='data/data_label.h5',
-                        help='path to the h5file containing the preprocessed dataset')
 
     parser.add_argument('--cached_tokens', type=str, default='coco-all-idxs',
                         help='Cached token file for calculating cider score \
@@ -25,16 +23,16 @@ def parse_opt():
                         help="with model to use")
 
     parser.add_argument("--max_len", type=int, default=28, help='max length of captions(containing <sos>,<eos>)')
-    parser.add_argument("--bidirectional", type=int, default=0,
+    parser.add_argument("--bidirectional", action='store_true', default=False,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
     parser.add_argument('--dim_hidden', type=int, default=1024,
                         help='size of the rnn hidden layer')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
-    parser.add_argument('--input_dropout_p', type=float, default=0.1,
+    parser.add_argument('--input_dropout_p', type=float, default=0.2,
                         help='strength of dropout in the Language Model RNN')
-    parser.add_argument('--rnn_dropout_p', type=float, default=0.2,
+    parser.add_argument('--rnn_dropout_p', type=float, default=0.5,
                         help='strength of dropout in the Language Model RNN')
     parser.add_argument('--dim_word', type=int, default=512,
                         help='the encoding size of each token in the vocabulary, and the video.')

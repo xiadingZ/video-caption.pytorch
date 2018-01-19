@@ -32,8 +32,8 @@ class Attention(nn.Module):
         hidden_state = hidden_state.unsqueeze(1).repeat(1, seq_len, 1)
         inputs = torch.cat((encoder_outputs, hidden_state),
                            2).view(-1, self.dim * 2)
-        o = F.tanh(self.linear1(inputs))
-        e = self.linear2(o).view(batch_size, seq_len)
+        o = self.linear2(F.tanh(self.linear1(inputs)))
+        e = o.view(batch_size, seq_len)
         alpha = F.softmax(e, dim=1)
         context = torch.bmm(alpha.unsqueeze(1), encoder_outputs).squeeze(1)
         return context

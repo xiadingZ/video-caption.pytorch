@@ -39,15 +39,20 @@ def test(model, crit, dataset, vocab, opt):
         # forward the model to get loss
         fc_feats = Variable(data['fc_feats']).cuda()
         labels = Variable(data['labels']).long().cuda()
+        masks = Variable(data['masks']).cuda()
+        video_ids = data['video_ids']
         with torch.no_grad():
             # forward the model to also get generated samples for each image
             seq_probs, seq_preds = model(
                 fc_feats, labels, teacher_forcing_ratio=0)
+            loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
+            test_loss = loss.data[0]
+            print(test_loss)
 
         sents = utils.decode_sequence(vocab, seq_preds)
 
         for k, sent in enumerate(sents):
-            video_id = 'video' + str(data['ix'][k])
+            video_id = video_ids[k]
             samples[video_id] = [{'image_id': video_id, 'caption': sent}]
 
     with suppress_stdout_stderr():
@@ -68,7 +73,7 @@ def test(model, crit, dataset, vocab, opt):
 def main(opt):
     dataset = VideoDataset(opt, opt.mode)
     opt.vocab_size = dataset.get_vocab_size()
-    opt.seq_length = dataset.seq_length
+    opt.seq_length = dataset.max_len
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()

@@ -105,14 +105,15 @@ def main(opt):
     opt.vocab_size = train_dataset.get_vocab_size()
     val_dataset = VideoDataset(opt, 'val')
     val_dataloader = DataLoader(
-        val_dataset, batch_size=120, shuffle=True)
+        val_dataset, batch_size=opt.batch_size, shuffle=True)
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
     elif opt.model == "S2VTAttModel":
-        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
-                             rnn_dropout_p=opt.rnn_dropout_p)
+        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden, bidirectional=opt.bidirectional,
+                            input_dropout_p=opt.input_dropout_p, rnn_dropout_p=opt.rnn_dropout_p)
+        decoder = DecoderRNN(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word, input_dropout_p=opt.input_dropout_p,
+                            rnn_dropout_p=opt.rnn_dropout_p, bidirectional=opt.bidirectional)
         model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()

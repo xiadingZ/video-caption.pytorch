@@ -70,26 +70,25 @@ class VideoDataset(Dataset):
         fc_feat = np.load(os.path.join(self.feats_dir,
                                        'video' + str(ix) + '.npy'))
 
-        label = np.zeros([self.max_len], dtype='int')
-        mask = np.zeros([self.max_len], dtype='float32')
+        label = torch.zeros(self.max_len)
+        mask = torch.zeros(self.max_len)
         captions = self.captions['video' + str(ix)]['final_captions']
         # random select a caption for this video
         cap_ix = random.randint(0, len(captions) - 1)
         cap = captions[cap_ix]
-        if len(cap) > 28:
-            cap = cap[:28]
+        if len(cap) > self.max_len:
+            cap = cap[:self.max_len]
             cap[-1] = '<eos>'
-        for i in range(len(cap)):
-            label[i] = self.word_to_ix[cap[i]]
-            mask[i] = 1
 
-        # generate mask
+        for i, w in enumerate(cap):
+            label[i] = self.word_to_ix[w]
+            mask[i] = 1
 
         data = {}
         data['fc_feats'] = torch.from_numpy(fc_feat)
-        data['labels'] = torch.from_numpy(label)
-        data['masks'] = torch.from_numpy(mask)
-        data['video_id'] = 'video' + str(ix)
+        data['labels'] = label
+        data['masks'] = mask
+        data['video_ids'] = 'video' + str(ix)
         return data
 
     def __len__(self):

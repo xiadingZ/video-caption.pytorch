@@ -29,24 +29,23 @@ class DecoderRNN(nn.Module):
         super().__init__()
 
         self.bidirectional_encoder = bidirectional
-        if rnn_cell.lower() == 'lstm':
-            self.rnn_cell = nn.LSTM
-        elif rnn_cell.lower() == 'gru':
-            self.rnn_cell = nn.GRU
-        self.rnn = self.rnn_cell(dim_hidden + dim_word, dim_hidden, n_layers,
-                                 bidirectional=bidirectional, batch_first=True, dropout=rnn_dropout_p)
 
         self.dim_output = vocab_size
-        self.dim_hidden = dim_hidden
+        self.dim_hidden = dim_hidden * 2 if bidirectional else dim_hidden
         self.dim_word = dim_word
         self.max_length = max_len
         self.sos_id = 1
         self.eos_id = 0
         self.input_dropout = nn.Dropout(input_dropout_p)
         self.embedding = nn.Embedding(self.dim_output, dim_word)
-        self.attention = Attention(dim_hidden)
-
-        self.out = nn.Linear(dim_hidden, self.dim_output)
+        self.attention = Attention(self.dim_hidden)
+        if rnn_cell.lower() == 'lstm':
+            self.rnn_cell = nn.LSTM
+        elif rnn_cell.lower() == 'gru':
+            self.rnn_cell = nn.GRU
+        self.rnn = self.rnn_cell(self.dim_hidden + dim_word, self.dim_hidden,  n_layers,
+                                 batch_first=True, dropout=rnn_dropout_p)
+        self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
         self._init_hidden()
 
@@ -56,7 +55,7 @@ class DecoderRNN(nn.Module):
         Inputs: inputs, encoder_hidden, encoder_outputs, function, teacher_forcing_ratio
         - **encoder_hidden** (num_layers * num_directions, batch_size, dim_hidden): tensor containing the features in the
           hidden state `h` of encoder. Used as the initial hidden state of the decoder. (default `None`)
-        - **encoder_outputs** (batch, seq_len, dim_hidden): (default is `None`).
+        - **encoder_outputs** (batch, seq_len, dim_hidden * num_directions): (default is `None`).
         - **targets** (batch, max_length): targets labels of the ground truth sentences
         - **teacher_forcing_ratio** (float): The probability that teacher forcing will be used.
 
@@ -65,14 +64,13 @@ class DecoderRNN(nn.Module):
         - **seq_preds** (batch_size, max_length): predicted symbols
         """
         batch_size, _, _ = encoder_outputs.size()
-        decoder_hidden = self._init_state(encoder_hidden)
+        decoder_hidden = self._init_rnn_state(encoder_hidden)
 
         use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         seq_probs = []
         seq_preds = []
 
-        decoder_hidden = None
         if use_teacher_forcing:
             # use targets as rnn inputs
             for i in range(self.max_length - 1):
@@ -126,7 +124,7 @@ class DecoderRNN(nn.Module):
         """
         nn.init.xavier_normal(self.out.weight)
 
-    def _init_state(self, encoder_hidden):
+    def _init_rnn_state(self, encoder_hidden):
         """ Initialize the encoder hidden state. """
         if encoder_hidden is None:
             return None
