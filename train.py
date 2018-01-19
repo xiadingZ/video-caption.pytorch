@@ -31,11 +31,10 @@ def val(dataloader, model, crit):
     return val_loss
 
 
-def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
+def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
     model = nn.DataParallel(model)
-    # lowest val loss
-    best_loss = None
+
     for epoch in range(opt.epochs):
         lr_scheduler.step()
 
@@ -47,7 +46,7 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
         else:
             sc_flag = False
 
-        for data in train_loader:
+        for data in loader:
             torch.cuda.synchronize()
             fc_feats = Variable(data['fc_feats']).cuda()
             labels = Variable(data['labels']).long().cuda()
@@ -78,42 +77,26 @@ def train(train_loader, val_loader, model, crit, optimizer, lr_scheduler, opt, r
                 print("iter %d (epoch %d), avg_reward = %.3f" % (iteration, epoch,
                                                                  np.mean(reward[:, 0])))
 
-        # lowest val loss
 
         if epoch % opt.save_checkpoint_every == 0:
             checkpoint_path = os.path.join(
                 opt.checkpoint_path, 'model_%d.pth' % (epoch))
             torch.save(model.state_dict(), checkpoint_path)
             print("model saved to %s" % (checkpoint_path))
-            val_loss = val(val_loader, model, crit)
-            print("Val loss is: %.6f" % (val_loss))
-            model.train()
-            if best_loss is None or val_loss < best_loss:
-                print("(epoch %d), now lowest val loss is %.6f" %
-                      (epoch, val_loss))
-                checkpoint_path = os.path.join(
-                    opt.checkpoint_path, 'model_best.pth')
-                torch.save(model.state_dict(), checkpoint_path)
-                print("best model saved to %s" % (checkpoint_path))
-                best_loss = val_loss
 
 
 def main(opt):
-    train_dataset = VideoDataset(opt, 'train')
-    train_dataloader = DataLoader(
-        train_dataset, batch_size=opt.batch_size, shuffle=True)
-    opt.vocab_size = train_dataset.get_vocab_size()
-    val_dataset = VideoDataset(opt, 'val')
-    val_dataloader = DataLoader(
-        val_dataset, batch_size=opt.batch_size, shuffle=True)
+    dataset = VideoDataset(opt, 'train')
+    dataloader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
+    opt.vocab_size = dataset.get_vocab_size()
     if opt.model == 'S2VTModel':
         model = S2VTModel(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
                           rnn_dropout_p=opt.rnn_dropout_p).cuda()
     elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden, bidirectional=opt.bidirectional,
-                            input_dropout_p=opt.input_dropout_p, rnn_dropout_p=opt.rnn_dropout_p)
+                             input_dropout_p=opt.input_dropout_p, rnn_dropout_p=opt.rnn_dropout_p)
         decoder = DecoderRNN(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word, input_dropout_p=opt.input_dropout_p,
-                            rnn_dropout_p=opt.rnn_dropout_p, bidirectional=opt.bidirectional)
+                             rnn_dropout_p=opt.rnn_dropout_p, bidirectional=opt.bidirectional)
         model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()
@@ -122,8 +105,7 @@ def main(opt):
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.learning_rate_decay_every,
                                                  gamma=opt.learning_rate_decay_rate)
 
-    train(train_dataloader, val_dataloader, model, crit,
-          optimizer, exp_lr_scheduler, opt, rl_crit)
+    train(dataloader, model, crit, optimizer, exp_lr_scheduler, opt, rl_crit)
 
 
 if __name__ == '__main__':

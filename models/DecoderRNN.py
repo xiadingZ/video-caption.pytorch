@@ -43,7 +43,7 @@ class DecoderRNN(nn.Module):
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
-        self.rnn = self.rnn_cell(self.dim_hidden + dim_word, self.dim_hidden,  n_layers,
+        self.rnn = self.rnn_cell(self.dim_hidden + dim_word, self.dim_hidden, n_layers,
                                  batch_first=True, dropout=rnn_dropout_p)
         self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
