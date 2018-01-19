@@ -74,8 +74,7 @@ if __name__ == "__main__":
                         help='msr_vtt videoinfo json')
     parser.add_argument('--info_json', default='data/info.json',
                         help='info about iw2word and word2ix')
-    parser.add_argument(
-        '--caption_json', default='data/caption.json', help='caption json file')
+    parser.add_argument('--caption_json', default='data/caption.json', help='caption json file')
 
 
     parser.add_argument('--word_count_threshold', default=1, type=int,

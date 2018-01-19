@@ -19,8 +19,7 @@ class DecoderRNN(nn.Module):
         rnn_cell (str, optional): type of RNN cell (default: gru)
         bidirectional (bool, optional): if the encoder is bidirectional (default False)
         input_dropout_p (float, optional): dropout probability for the input sequence (default: 0)
-        dropout_p (float, optional): dropout probability for the output sequence (default: 0)
-        use_attention(bool, optional): flag indication whether to use attention mechanism or not (default: false)
+        rnn_dropout_p (float, optional): dropout probability for the output sequence (default: 0)
 
     """
 
@@ -48,6 +47,8 @@ class DecoderRNN(nn.Module):
         self.attention = Attention(dim_hidden)
 
         self.out = nn.Linear(dim_hidden, self.dim_output)
+
+        self._init_hidden()
 
     def forward(self, encoder_outputs, encoder_hidden, targets=None, teacher_forcing_ratio=1):
         """
@@ -119,6 +120,11 @@ class DecoderRNN(nn.Module):
             seq_preds = torch.cat(seq_preds, 1)
 
         return seq_probs, seq_preds
+
+    def _init_hidden(self):
+        """ init the weight of linear layer
+        """
+        nn.init.xavier_normal(self.out.weight)
 
     def _init_state(self, encoder_hidden):
         """ Initialize the encoder hidden state. """

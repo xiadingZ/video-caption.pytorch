@@ -19,9 +19,8 @@ class S2VTAttModel(nn.Module):
 
         Args:
             vid_feats (Variable): Description
-            input_lengths (None, optional): Description
-            target_variable (None, optional): Description
-            teacher_forcing_ratio (int, optional): Description
+            target_variable (None, optional): groung truth labels
+            teacher_forcing_ratio (int, optional):
 
         Returns:
             TYPE: Description

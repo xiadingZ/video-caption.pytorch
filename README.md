@@ -42,13 +42,13 @@ python prepro_coco.py
 python finetune_cnn.py --gpu 4,5,6,7 --checkpoint_path data/save_cnn/ --batch_size 200
 ```
 
-I have a finetuned cnn model, you can [download it](https://drive.google.com/open?id=1yJW5GVJUaKjmm8B4dak9hxC4lYGMMG51)
+I have a finetuned inception_v4 model, you can [download it](https://drive.google.com/open?id=1yJW5GVJUaKjmm8B4dak9hxC4lYGMMG51)
 
 ### Steps
 
 1. preprocess videos and labels
 
-    this steps take about 2 hours for msr-vtt datasets use one titan XP gpu
+    this steps take about 3 hours for msr-vtt datasets use one titan XP gpu
 ```
 python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50 --gpu 0,1 --saved_model data/save_cnn/cnn_model_50.pth
 ```

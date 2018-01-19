@@ -13,6 +13,11 @@ class Attention(nn.Module):
         self.dim = dim
         self.linear1 = nn.Linear(dim * 2, dim)
         self.linear2 = nn.Linear(dim, 1, bias=False)
+        self._init_hidden()
+
+    def _init_hidden(self):
+        nn.init.xavier_normal(self.linear1.weight)
+        nn.init.xavier_normal(self.linear2.weight)
 
     def forward(self, hidden_state, encoder_outputs):
         """

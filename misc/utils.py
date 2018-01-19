@@ -48,6 +48,7 @@ class LanguageModelCriterion(nn.Module):
 
     def __init__(self):
         super().__init__()
+        self.loss_fn = nn.NLLLoss(reduce=False)
 
     def forward(self, logits, target, mask):
         """
@@ -57,13 +58,12 @@ class LanguageModelCriterion(nn.Module):
         """
         # truncate to the same size
         batch_size = logits.shape[0]
-        loss_fn = nn.NLLLoss(reduce=False)
         target = target[:, :logits.shape[1]]
         mask = mask[:, :logits.shape[1]]
         logits = to_contiguous(logits).view(-1, logits.shape[2])
         target = to_contiguous(target).view(-1)
         mask = to_contiguous(mask).view(-1)
-        loss = loss_fn(logits, target)
+        loss = self.loss_fn(logits, target)
         output = torch.sum(loss * mask) / batch_size
         return output
 

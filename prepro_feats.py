@@ -35,11 +35,12 @@ def extract_frames(video, dst):
 
 def extract_feats(params, model, load_image_fn):
     global C, H, W
+    model.eval()
 
     dir_fc = params['output_dir']
     if not os.path.isdir(dir_fc):
         os.mkdir(dir_fc)
-
+    print("save video feats to %s" % (dir_fc))
     video_list = glob.glob(os.path.join(params['video_path'], '*.mp4'))
     for video in tqdm(video_list):
         video_id = video.split("/")[-1].split(".")[0]
@@ -110,5 +111,4 @@ if __name__ == '__main__':
     if params['saved_model'] != '':
         model.load_state_dict(torch.load(params['saved_model']), strict=False)
     model = model.cuda()
-    model = model.eval()
     extract_feats(params, model, load_image_fn)

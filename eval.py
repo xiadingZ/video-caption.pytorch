@@ -28,6 +28,7 @@ def convert_data_to_coco_scorer_format(data_frame):
 
 
 def test(model, crit, dataset, vocab, opt):
+    model.eval()
     loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
     scorer = COCOScorer()
     gt_dataframe = json_normalize(json.load(open(opt.input_json))['sentences'])
@@ -42,7 +43,6 @@ def test(model, crit, dataset, vocab, opt):
             # forward the model to also get generated samples for each image
             seq_probs, seq_preds = model(
                 fc_feats, labels, teacher_forcing_ratio=0)
-            print(seq_preds)
 
         sents = utils.decode_sequence(vocab, seq_preds)
 
@@ -75,12 +75,11 @@ def main(opt):
     elif opt.model == "S2VTAttModel":
         encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
         decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
-                             rnn_dropout_p=0.2)
+                             rnn_dropout_p=opt.rnn_dropout_p)
         model = S2VTAttModel(encoder, decoder).cuda()
     model = nn.DataParallel(model)
     # Setup the model
     model.load_state_dict(torch.load(opt.saved_model))
-    model.eval()
     crit = utils.LanguageModelCriterion()
 
     test(model, crit, dataset, dataset.get_vocab(), opt)

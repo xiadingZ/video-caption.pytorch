@@ -33,6 +33,11 @@ class EncoderRNN(nn.Module):
         self.rnn = self.rnn_cell(dim_hidden, dim_hidden, n_layers,
                                  batch_first=True, bidirectional=bidirectional, dropout=dropout_p)
 
+        self._init_hidden()
+
+    def _init_hidden(self):
+        nn.init.xavier_normal(self.vid2hid.weight)
+
     def forward(self, vid_feats):
         """
         Applies a multi-layer RNN to an input sequence.
