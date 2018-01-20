@@ -27,7 +27,7 @@ MSR-VTT. Test video doesn't have captions, so I spilit train-viedo to train/val/
 
 ## Options
 
-all default options are defined in opt.py or corresponding code file, change it for your like.
+all default options are defined in opt["py or corresponding code file, change it for your like.
 
 ## Usage
 
@@ -41,7 +41,7 @@ you can pretrain cnn model used to extract features of video frames using coco20
 extract them to `data/mscoco/train2014` and `data/mscoco/annotations` and `data/mscoco/word_counts.txt`. For details,
 see the params of code.
 
-```python
+```bash
 python prepro_coco.py
 
 python finetune_cnn.py --gpu 4,5,6,7 --checkpoint_path data/save_cnn/ --batch_size 200
@@ -55,7 +55,7 @@ I have a finetuned inception_v4 model, you can [download it](https://drive.googl
 
     this steps take about 3 hours for msr-vtt datasets use one titan XP gpu
 
-```Python
+```bash
 python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50 --gpu 0,1 --saved_model data/save_cnn/cnn_model_50.pth
 
 python prepro_vocab.py
@@ -65,13 +65,13 @@ python prepro_vocab.py
 
     To train a model, simply run
 
-```Python
+```bash
 python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout_p 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
 ```
 
 3. test
 
-```Python
+```bash
 python eval.py --mode test --model S2VTAttModel --saved_model data/save7/model_best.pth --gpu 2,3,4 --dim_hidden 1024 --dim_vid 1536 --dim_word 512 --feats_dir data/feats/incepv4
 ```
 

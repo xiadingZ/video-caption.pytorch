@@ -22,7 +22,8 @@ def parse_opt():
     parser.add_argument("--model", type=str, default='S2VTModel',
                         help="with model to use")
 
-    parser.add_argument("--max_len", type=int, default=28, help='max length of captions(containing <sos>,<eos>)')
+    parser.add_argument("--max_len", type=int, default=28,
+                        help='max length of captions(containing <sos>,<eos>)')
     parser.add_argument("--bidirectional", action='store_true', default=False,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
@@ -74,22 +75,10 @@ def parse_opt():
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--checkpoint_path', type=str, default='save',
                         help='directory to store checkpointed models')
-    parser.add_argument('--mode', type=str, default='train',
-                        help='train/val/test data to load')
+
     parser.add_argument('--gpu', type=str, default='0',
                         help='gpu device number')
 
-    # used in eval.py
-
-    parser.add_argument('--saved_model', type=str, default='',
-                        help='path to saved model to evaluate')
-    parser.add_argument('--verbose', type=int, default=1, help='show message')
-
-    parser.add_argument('--dump_json', type=int, default=1,
-                        help='Dump json with predictions into vis folder? (1=yes,0=no)')
-    parser.add_argument('--results_path', type=str, default='results/')
-    parser.add_argument('--dump_path', type=int, default=0,
-                        help='Write image paths along with predictions into vis json? (1=yes,0=no)')
     args = parser.parse_args()
 
     return args

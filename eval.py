@@ -1,6 +1,6 @@
 import json
 import os
-
+import argparse
 import opts
 import torch
 from torch import nn
@@ -29,9 +29,10 @@ def convert_data_to_coco_scorer_format(data_frame):
 
 def test(model, crit, dataset, vocab, opt):
     model.eval()
-    loader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
+    loader = DataLoader(dataset, batch_size=opt["batch_size"], shuffle=True)
     scorer = COCOScorer()
-    gt_dataframe = json_normalize(json.load(open(opt.input_json))['sentences'])
+    gt_dataframe = json_normalize(
+        json.load(open(opt["input_json"]))['sentences'])
     gts = convert_data_to_coco_scorer_format(gt_dataframe)
     results = []
     samples = {}
@@ -60,37 +61,59 @@ def test(model, crit, dataset, vocab, opt):
     results.append(valid_score)
     print(valid_score)
 
-    if not os.path.exists(opt.results_path):
-        os.makedirs(opt.results_path)
+    if not os.path.exists(opt["results_path"]):
+        os.makedirs(opt["results_path"])
 
-    with open(os.path.join(opt.results_path, "scores.txt"), 'a') as scores_table:
+    with open(os.path.join(opt["results_path"], "scores.txt"), 'a') as scores_table:
         scores_table.write(json.dumps(results[0]) + "\n")
-    with open(os.path.join(opt.results_path, opt.model.split("/")[-1].split('.')[0] + ".json"), 'w') as prediction_results:
+    with open(os.path.join(opt["results_path"],
+                           opt["model"].split("/")[-1].split('.')[0] + ".json"), 'w') as prediction_results:
         json.dump({"predictions": samples, "scores": valid_score},
                   prediction_results)
 
 
 def main(opt):
-    dataset = VideoDataset(opt, opt.mode)
-    opt.vocab_size = dataset.get_vocab_size()
-    opt.seq_length = dataset.max_len
-    if opt.model == 'S2VTModel':
-        model = S2VTModel(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
-                          rnn_dropout_p=opt.rnn_dropout_p).cuda()
-    elif opt.model == "S2VTAttModel":
-        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden)
-        decoder = DecoderRNN(opt.vocab_size, opt.seq_length, opt.dim_hidden, opt.dim_word,
-                             rnn_dropout_p=opt.rnn_dropout_p)
+    dataset = VideoDataset(opt, "test")
+    opt["vocab_size"] = dataset.get_vocab_size()
+    opt["seq_length"] = dataset.max_len
+    if opt["model"] == 'S2VTModel':
+        model = S2VTModel(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"],
+                          rnn_dropout_p=opt["rnn_dropout_p"]).cuda()
+    elif opt["model"] == "S2VTAttModel":
+        encoder = EncoderRNN(opt["dim_vid"], opt["dim_hidden"], bidirectional=opt["bidirectional"],
+                             input_dropout_p=opt["input_dropout_p"], rnn_dropout_p=opt["rnn_dropout_p"])
+        decoder = DecoderRNN(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"],
+                             input_dropout_p=opt["input_dropout_p"],
+                             rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=opt["bidirectional"])
         model = S2VTAttModel(encoder, decoder).cuda()
     model = nn.DataParallel(model)
     # Setup the model
-    model.load_state_dict(torch.load(opt.saved_model))
+    model.load_state_dict(torch.load(opt["saved_model"]))
     crit = utils.LanguageModelCriterion()
 
     test(model, crit, dataset, dataset.get_vocab(), opt)
 
 
 if __name__ == '__main__':
-    opt = opts.parse_opt()
-    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--recover_opt', type=str, required=True,
+                        help='recover train opts from saved opt_json')
+    parser.add_argument('--saved_model', type=str, default='',
+                        help='path to saved model to evaluate')
+
+    parser.add_argument('--dump_json', type=int, default=1,
+                        help='Dump json with predictions into vis folder? (1=yes,0=no)')
+    parser.add_argument('--results_path', type=str, default='results/')
+    parser.add_argument('--dump_path', type=int, default=0,
+                        help='Write image paths along with predictions into vis json? (1=yes,0=no)')
+    parser.add_argument('--gpu', type=str, default='0',
+                        help='gpu device number')
+    parser.add_argument('--batch_size', type=int, default=128,
+                        help='minibatch size')
+    args = parser.parse_args()
+    args = vars((args))
+    opt = json.load(open(args["recover_opt"]))
+    for k, v in args.items():
+        opt[k] = v
+    os.environ['CUDA_VISIBLE_DEVICES'] = opt["gpu"]
     main(opt)

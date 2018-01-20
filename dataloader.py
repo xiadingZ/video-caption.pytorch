@@ -42,8 +42,8 @@ class VideoDataset(Dataset):
         self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset
-        self.captions = json.load(open(opt.caption_json))
-        info = json.load(open(opt.info_json))
+        self.captions = json.load(open(opt["caption_json"]))
+        info = json.load(open(opt["info_json"]))
         self.ix_to_word = info['ix_to_word']
         self.word_to_ix = info['word_to_ix']
         print('vocab size is ', len(self.ix_to_word))
@@ -52,10 +52,10 @@ class VideoDataset(Dataset):
         print('number of val videos: ', len(self.splits['val']))
         print('number of test videos: ', len(self.splits['test']))
 
-        self.feats_dir = opt.feats_dir
+        self.feats_dir = opt["feats_dir"]
         print('load feats from %s' % (self.feats_dir))
         # load in the sequence data
-        self.max_len = opt.max_len
+        self.max_len = opt["max_len"]
         print('max sequence length in data is', self.max_len)
 
     def __getitem__(self, ix):

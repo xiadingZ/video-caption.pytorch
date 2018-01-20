@@ -35,14 +35,14 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
     model = nn.DataParallel(model)
 
-    for epoch in range(opt.epochs):
+    for epoch in range(opt["epochs"]):
         lr_scheduler.step()
 
         iteration = 0
         # If start self crit training
-        if opt.self_crit_after != -1 and epoch >= opt.self_crit_after:
+        if opt["self_crit_after"] != -1 and epoch >= opt["self_crit_after"]:
             sc_flag = True
-            init_cider_scorer(opt.cached_tokens)
+            init_cider_scorer(opt["cached_tokens"])
         else:
             sc_flag = False
 
@@ -64,7 +64,7 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
 
             optimizer.zero_grad()
             loss.backward()
-            utils.clip_gradient(optimizer, opt.grad_clip)
+            utils.clip_gradient(optimizer, opt["grad_clip"])
             optimizer.step()
             train_loss = loss.data[0]
             torch.cuda.synchronize()
@@ -77,44 +77,45 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                 print("iter %d (epoch %d), avg_reward = %.3f" % (iteration, epoch,
                                                                  np.mean(reward[:, 0])))
 
-
-        if epoch % opt.save_checkpoint_every == 0:
+        if epoch % opt["save_checkpoint_every"] == 0:
             checkpoint_path = os.path.join(
-                opt.checkpoint_path, 'model_%d.pth' % (epoch))
+                opt["checkpoint_path"], 'model_%d.pth' % (epoch))
             torch.save(model.state_dict(), checkpoint_path)
             print("model saved to %s" % (checkpoint_path))
 
 
 def main(opt):
     dataset = VideoDataset(opt, 'train')
-    dataloader = DataLoader(dataset, batch_size=opt.batch_size, shuffle=True)
-    opt.vocab_size = dataset.get_vocab_size()
-    if opt.model == 'S2VTModel':
-        model = S2VTModel(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word,
-                          rnn_dropout_p=opt.rnn_dropout_p).cuda()
-    elif opt.model == "S2VTAttModel":
-        encoder = EncoderRNN(opt.dim_vid, opt.dim_hidden, bidirectional=opt.bidirectional,
-                             input_dropout_p=opt.input_dropout_p, rnn_dropout_p=opt.rnn_dropout_p)
-        decoder = DecoderRNN(opt.vocab_size, opt.max_len, opt.dim_hidden, opt.dim_word, input_dropout_p=opt.input_dropout_p,
-                             rnn_dropout_p=opt.rnn_dropout_p, bidirectional=opt.bidirectional)
+    dataloader = DataLoader(
+        dataset, batch_size=opt["batch_size"], shuffle=True)
+    opt["vocab_size"] = dataset.get_vocab_size()
+    if opt["model"] == 'S2VTModel':
+        model = S2VTModel(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"],
+                          rnn_dropout_p=opt["rnn_dropout_p"]).cuda()
+    elif opt["model"] == "S2VTAttModel":
+        encoder = EncoderRNN(opt["dim_vid"], opt["dim_hidden"], bidirectional=opt["bidirectional"],
+                             input_dropout_p=opt["input_dropout_p"], rnn_dropout_p=opt["rnn_dropout_p"])
+        decoder = DecoderRNN(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"], input_dropout_p=opt["input_dropout_p"],
+                             rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=opt["bidirectional"])
         model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()
     optimizer = optim.Adam(
-        model.parameters(), lr=opt.learning_rate, weight_decay=opt.weight_decay)
-    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt.learning_rate_decay_every,
-                                                 gamma=opt.learning_rate_decay_rate)
+        model.parameters(), lr=opt["learning_rate"], weight_decay=opt["weight_decay"])
+    exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=opt["learning_rate_decay_every"],
+                                                 gamma=opt["learning_rate_decay_rate"])
 
     train(dataloader, model, crit, optimizer, exp_lr_scheduler, opt, rl_crit)
 
 
 if __name__ == '__main__':
     opt = opts.parse_opt()
-    os.environ['CUDA_VISIBLE_DEVICES'] = opt.gpu
-    opt_json = os.path.join(opt.checkpoint_path, 'opt_info.json')
-    if not os.path.isdir(opt.checkpoint_path):
-        os.mkdir(opt.checkpoint_path)
+    opt = vars(opt)
+    os.environ['CUDA_VISIBLE_DEVICES'] = opt["gpu"]
+    opt_json = os.path.join(opt["checkpoint_path"], 'opt_info.json')
+    if not os.path.isdir(opt["checkpoint_path"]):
+        os.mkdir(opt["checkpoint_path"])
     with open(opt_json, 'w') as f:
-        json.dump(vars(opt), f)
+        json.dump(opt, f)
     print('save opt details to %s' % (opt_json))
     main(opt)
