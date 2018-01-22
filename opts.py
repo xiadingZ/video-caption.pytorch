@@ -11,10 +11,10 @@ def parse_opt():
     parser.add_argument('--caption_json', type=str, default='data/caption.json',
                         help='path to the processed video caption json')
 
-    parser.add_argument('--feats_dir', type=str, default='data/feats/train_fc/',
+    parser.add_argument('--feats_dir', type=str, default='data/feats/resnet152/',
                         help='path to the directory containing the preprocessed fc feats')
 
-    parser.add_argument('--cached_tokens', type=str, default='coco-all-idxs',
+    parser.add_argument('--cached_tokens', type=str, default='msr-all-idxs',
                         help='Cached token file for calculating cider score \
                         during self critical training.')
 
@@ -68,7 +68,7 @@ def parse_opt():
                         help='beta used for adam')
     parser.add_argument('--optim_epsilon', type=float, default=1e-8,
                         help='epsilon that goes into denominator for smoothing')
-    parser.add_argument('--weight_decay', type=float, default=0.8,
+    parser.add_argument('--weight_decay', type=float, default=0.1,
                         help='weight_decay. strength of weight regularization')
 
     parser.add_argument('--save_checkpoint_every', type=int, default=50,

@@ -65,7 +65,7 @@ def build_dict(vids, wtoi):
         ref_words = []
         ref_idxs = []
         for cap in vids[vid]['final_captions']:
-            tmp_tokens = cap + ['<eos>']
+            tmp_tokens = cap
             tmp_tokens = [_ if _ in wtoi else '<UNK>' for _ in tmp_tokens]
             ref_words.append(' '.join(tmp_tokens))
             ref_idxs.append(' '.join([str(wtoi[_]) for _ in tmp_tokens]))
@@ -95,8 +95,8 @@ if __name__ == "__main__":
     # input json
     parser.add_argument('--caption_json', default='data/caption.json',
                         help='input json file to containing video captions')
-    parser.add_argument('--info_json', default='data/info.json', help='output json file')
-    parser.add_argument('--output_pkl', default='data/coco-all', help='output pickle file')
+    parser.add_argument('--info_json', default='data/info.json', help='vocab info json file')
+    parser.add_argument('--output_pkl', default='data/msr-all', help='output pickle file')
     args = parser.parse_args()
     params = vars(args)  # convert to ordinary dict
 
