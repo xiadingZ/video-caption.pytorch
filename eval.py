@@ -1,7 +1,6 @@
 import json
 import os
 import argparse
-import opts
 import torch
 from torch import nn
 from torch.autograd import Variable
@@ -48,7 +47,6 @@ def test(model, crit, dataset, vocab, opt):
                 fc_feats, labels, teacher_forcing_ratio=0)
             loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             test_loss = loss.data[0]
-            print(test_loss)
 
         sents = utils.decode_sequence(vocab, seq_preds)
 

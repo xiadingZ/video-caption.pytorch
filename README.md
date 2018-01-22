@@ -27,7 +27,7 @@ MSR-VTT. Test video doesn't have captions, so I spilit train-viedo to train/val/
 
 ## Options
 
-all default options are defined in opt["py or corresponding code file, change it for your like.
+all default options are defined in opt.py or corresponding code file, change it for your like.
 
 ## Usage
 
@@ -63,21 +63,21 @@ python prepro_vocab.py
 
 2. Training a model
 
-    To train a model, simply run
-
 ```bash
 python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout_p 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
 ```
 
 3. test
 
+    opt_info.json will be in same directory as saved model.
+
 ```bash
-python eval.py --mode test --model S2VTAttModel --saved_model data/save7/model_best.pth --gpu 2,3,4 --dim_hidden 1024 --dim_vid 1536 --dim_word 512 --feats_dir data/feats/incepv4
+python eval.py --recover_opt data/save5/opt_info.json --saved_model data/save5/model_300.pth --batch_size 10 --gpu 1,0
 ```
 
 ## Metrics
 
-I fork the [coco-caption](https://github.com/tylin/coco-caption) and port it to python3, but meteor doesn't work. Welcome to talk to me about that.
+I fork the [coco-caption](https://github.com/tylin/coco-caption) and port it to python3, but `meteor` doesn't work. Welcome to talk to me about that.
 
 ## welcome pull request
 

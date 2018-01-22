@@ -74,14 +74,18 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                 print("iter %d (epoch %d), train_loss = %.6f" %
                       (iteration, epoch, train_loss))
             else:
-                print("iter %d (epoch %d), avg_reward = %.3f" % (iteration, epoch,
+                print("iter %d (epoch %d), avg_reward = %.6f" % (iteration, epoch,
                                                                  np.mean(reward[:, 0])))
 
         if epoch % opt["save_checkpoint_every"] == 0:
-            checkpoint_path = os.path.join(
+            model_path = os.path.join(
                 opt["checkpoint_path"], 'model_%d.pth' % (epoch))
-            torch.save(model.state_dict(), checkpoint_path)
-            print("model saved to %s" % (checkpoint_path))
+            model_info_path = os.path.join(
+                opt["checkpoint_path"], 'model_score.txt')
+            torch.save(model.state_dict(), model_path)
+            print("model saved to %s" % (model_path))
+            with open(model_info_path, 'a') as f:
+                f.write("model_%d, loss: %.6f\n" % (epoch, train_loss))
 
 
 def main(opt):
@@ -95,7 +99,8 @@ def main(opt):
     elif opt["model"] == "S2VTAttModel":
         encoder = EncoderRNN(opt["dim_vid"], opt["dim_hidden"], bidirectional=opt["bidirectional"],
                              input_dropout_p=opt["input_dropout_p"], rnn_dropout_p=opt["rnn_dropout_p"])
-        decoder = DecoderRNN(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"], input_dropout_p=opt["input_dropout_p"],
+        decoder = DecoderRNN(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"],
+                             input_dropout_p=opt["input_dropout_p"],
                              rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=opt["bidirectional"])
         model = S2VTAttModel(encoder, decoder).cuda()
     crit = utils.LanguageModelCriterion()
