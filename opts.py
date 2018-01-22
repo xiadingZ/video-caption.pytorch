@@ -68,8 +68,8 @@ def parse_opt():
                         help='beta used for adam')
     parser.add_argument('--optim_epsilon', type=float, default=1e-8,
                         help='epsilon that goes into denominator for smoothing')
-    parser.add_argument('--weight_decay', type=float, default=0,
-                        help='weight_decay')
+    parser.add_argument('--weight_decay', type=float, default=0.8,
+                        help='weight_decay. strength of weight regularization')
 
     parser.add_argument('--save_checkpoint_every', type=int, default=50,
                         help='how often to save a model checkpoint (in epoch)?')
