@@ -59,7 +59,7 @@ if __name__ == '__main__':
                         default='data/mscoco/word_counts.txt', help='word_counts.txt of coco dataset')
     parser.add_argument('--msr_caption_json', type=str,
                         default='data/caption.json', help='path to processed msr vtt caption json')
-    parser.add_argument('--num_classes', type=int, default=3000,
+    parser.add_argument('--num_classes', type=int, default=1000,
                         help='number of classes each image')
     parser.add_argument('--coco_labels_json', type=str, default='data/coco_labels.json',
                         help='path to processed coco train caption json')

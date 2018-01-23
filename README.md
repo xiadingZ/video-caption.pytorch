@@ -31,24 +31,6 @@ all default options are defined in opt.py or corresponding code file, change it 
 
 ## Usage
 
-### Optional
-
-you can pretrain cnn model used to extract features of video frames using coco2014 dataset. Download and put them in `data`.
-
-- coco-dataset 2014 (download from ms-coco website)
-- word_counts.txt [download link](https://drive.google.com/open?id=1yor3VwdAzN1Ur5Jev9RClegCuBQuCK09)
-
-extract them to `data/mscoco/train2014` and `data/mscoco/annotations` and `data/mscoco/word_counts.txt`. For details,
-see the params of code.
-
-```bash
-python prepro_coco.py
-
-python finetune_cnn.py --gpu 4,5,6,7 --checkpoint_path data/save_cnn/ --batch_size 200
-```
-
-I have a finetuned inception_v4 model, you can [download it](https://drive.google.com/open?id=1yJW5GVJUaKjmm8B4dak9hxC4lYGMMG51)
-
 ### Steps
 
 1. preprocess videos and labels

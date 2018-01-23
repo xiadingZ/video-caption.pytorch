@@ -11,10 +11,10 @@ def parse_opt():
     parser.add_argument('--caption_json', type=str, default='data/caption.json',
                         help='path to the processed video caption json')
 
-    parser.add_argument('--feats_dir', type=str, default='data/feats/train_fc/',
+    parser.add_argument('--feats_dir', type=str, default='data/feats/resnet152/',
                         help='path to the directory containing the preprocessed fc feats')
 
-    parser.add_argument('--cached_tokens', type=str, default='coco-all-idxs',
+    parser.add_argument('--cached_tokens', type=str, default='msr-all-idxs',
                         help='Cached token file for calculating cider score \
                         during self critical training.')
 
