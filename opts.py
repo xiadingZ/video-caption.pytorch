@@ -14,7 +14,11 @@ def parse_opt():
     parser.add_argument('--feats_dir', type=str, default='data/feats/resnet152/',
                         help='path to the directory containing the preprocessed fc feats')
 
+<<<<<<< HEAD
+    parser.add_argument('--cached_tokens', type=str, default='mst-all-idxs',
+=======
     parser.add_argument('--cached_tokens', type=str, default='msr-all-idxs',
+>>>>>>> b28fb0ee03da661a22ee83bf088bf76ee051ac8b
                         help='Cached token file for calculating cider score \
                         during self critical training.')
 
