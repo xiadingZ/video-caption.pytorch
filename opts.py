@@ -14,7 +14,11 @@ def parse_opt():
     parser.add_argument('--feats_dir', type=str, default='data/feats/resnet152/',
                         help='path to the directory containing the preprocessed fc feats')
 
+<<<<<<< HEAD
     parser.add_argument('--cached_tokens', type=str, default='mst-all-idxs',
+=======
+    parser.add_argument('--cached_tokens', type=str, default='msr-all-idxs',
+>>>>>>> b28fb0ee03da661a22ee83bf088bf76ee051ac8b
                         help='Cached token file for calculating cider score \
                         during self critical training.')
 
@@ -68,8 +72,8 @@ def parse_opt():
                         help='beta used for adam')
     parser.add_argument('--optim_epsilon', type=float, default=1e-8,
                         help='epsilon that goes into denominator for smoothing')
-    parser.add_argument('--weight_decay', type=float, default=0,
-                        help='weight_decay')
+    parser.add_argument('--weight_decay', type=float, default=0.1,
+                        help='weight_decay. strength of weight regularization')
 
     parser.add_argument('--save_checkpoint_every', type=int, default=50,
                         help='how often to save a model checkpoint (in epoch)?')
