@@ -83,7 +83,7 @@ def main(args):
     exp_lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=args.learning_rate_decay_every,
                                                  gamma=args.learning_rate_decay_rate)
 
-    crit = nn.BCEWithLogitsLoss()
+    crit = nn.MultiLabelSoftMarginLoss()
     if not os.path.isdir(args.checkpoint_path):
         os.mkdir(args.checkpoint_path)
     train(dataloader, model, crit, optimizer,
