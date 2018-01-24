@@ -1,6 +1,5 @@
 import json
 import argparse
-from pandas.io.json import json_normalize
 import nltk
 nltk.download('stopwords')
 from nltk.corpus import stopwords

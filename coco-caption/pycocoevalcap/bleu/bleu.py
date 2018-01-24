@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# 
 # File Name : bleu.py
 #
 # Description : Wrapper for BLEU scorer.
@@ -9,6 +10,7 @@
 
 from .bleu_scorer import BleuScorer
 
+
 class Bleu:
     def __init__(self, n=4):
         # default compute Blue score up to 4
@@ -18,8 +20,11 @@ class Bleu:
 
     def compute_score(self, gts, res):
 
+        assert(sorted(gts.keys()) == sorted(res.keys()))
+        imgIds = sorted(gts.keys())
+
         bleu_scorer = BleuScorer(n=self._n)
-        for id in sorted(gts.keys()):
+        for id in imgIds:
             hypo = res[id]
             ref = gts[id]
 
@@ -32,8 +37,8 @@ class Bleu:
             bleu_scorer += (hypo[0], ref)
 
         #score, scores = bleu_scorer.compute_score(option='shortest')
+        score, scores = bleu_scorer.compute_score(option='closest', verbose=1)
         #score, scores = bleu_scorer.compute_score(option='average', verbose=1)
-        score, scores = bleu_scorer.compute_score(option='closest', verbose=0)
 
         # return (bleu, bleu_info)
         return score, scores

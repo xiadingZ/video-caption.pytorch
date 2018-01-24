@@ -3,11 +3,9 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch import nn
 import torch.optim as optim
-import numpy as np
 import os
 import json
 import argparse
-import opts
 from dataloader import CocoDataset
 import pretrainedmodels
 from pretrainedmodels import utils
@@ -124,7 +122,7 @@ if __name__ == '__main__':
                         help='beta used for adam')
     parser.add_argument('--optim_epsilon', type=float, default=1e-8,
                         help='epsilon that goes into denominator for smoothing')
-    parser.add_argument('--weight_decay', type=float, default=0,
+    parser.add_argument('--weight_decay', type=float, default=5e-4,
                         help='weight_decay')
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Filename: cider.py
 #
 # Description: Describes the class to compute the CIDEr (Consensus-Based Image Description Evaluation) Metric 
@@ -9,8 +8,9 @@
 # Authors: Ramakrishna Vedantam <vrama91@vt.edu> and Tsung-Yi Lin <tl483@cornell.edu>
 
 from .cider_scorer import CiderScorer
+import pdb
 
-class Cider(object):
+class Cider:
     """
     Main Class to compute the CIDEr metric 
 
@@ -29,9 +29,12 @@ class Cider(object):
         :return: cider (float) : computed CIDEr score for the corpus 
         """
 
+        assert(sorted(gts.keys()) == sorted(res.keys()))
+        imgIds = sorted(gts.keys())
+
         cider_scorer = CiderScorer(n=self._n, sigma=self._sigma)
 
-        for id in sorted(gts.keys()):
+        for id in imgIds:
             hypo = res[id]
             ref = gts[id]
 
@@ -39,7 +42,7 @@ class Cider(object):
             assert(type(hypo) is list)
             assert(len(hypo) == 1)
             assert(type(ref) is list)
-            assert(len(ref) > 0)
+            assert(len(ref) >= 1)
 
             cider_scorer += (hypo[0], ref)
 

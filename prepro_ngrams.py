@@ -4,7 +4,7 @@ import pickle as pkl
 from collections import defaultdict
 
 
-def precook(s, n=4, out=False):
+def precook(s, n=4):
     """
     Takes a string as input and returns an object that can be given to
     either cook_refs or cook_test. This is optional: cook_refs and cook_test
@@ -95,7 +95,7 @@ if __name__ == "__main__":
     # input json
     parser.add_argument('--caption_json', default='data/caption.json',
                         help='input json file to containing video captions')
-    parser.add_argument('--info_json', default='data/info.json', help='output json file')
+    parser.add_argument('--info_json', default='data/info.json', help='vocab info json file')
     parser.add_argument('--output_pkl', default='data/msr-all', help='output pickle file')
     args = parser.parse_args()
     params = vars(args)  # convert to ordinary dict

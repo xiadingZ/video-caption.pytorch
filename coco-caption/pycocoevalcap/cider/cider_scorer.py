@@ -1,10 +1,11 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
 # Tsung-Yi Lin <tl483@cornell.edu>
 # Ramakrishna Vedantam <vrama91@vt.edu>
 
 import copy
 from collections import defaultdict
 import numpy as np
+import pdb
 import math
 
 def precook(s, n=4, out=False):
@@ -186,4 +187,6 @@ class CiderScorer(object):
         assert(len(self.ctest) >= max(self.document_frequency.values()))
         # compute cider score
         score = self.compute_cider()
+        # debug
+        # print score
         return np.mean(np.array(score)), np.array(score)

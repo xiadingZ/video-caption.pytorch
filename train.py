@@ -14,23 +14,6 @@ import misc.utils as utils
 from misc.rewards import init_cider_scorer, get_self_critical_reward
 
 
-def val(dataloader, model, crit):
-    model.eval()
-
-    losses = []
-    for data in dataloader:
-        torch.cuda.synchronize()
-        fc_feats = Variable(data['fc_feats']).cuda()
-        labels = Variable(data['labels']).long().cuda()
-        masks = Variable(data['masks']).cuda()
-        seq_probs, _ = model(fc_feats, labels)
-        loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
-        val_loss = loss.data[0]
-        losses.append(val_loss)
-    val_loss = sum(losses) / len(losses)
-    return val_loss
-
-
 def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
     model = nn.DataParallel(model)

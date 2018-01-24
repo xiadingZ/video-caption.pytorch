@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+
 # bleu_scorer.py
 # David Chiang <chiang@isi.edu>
 
@@ -16,7 +17,7 @@ cook_test(test, refs, n=4): Transform a test sentence as a string (together with
 '''
 
 import copy
-import math
+import sys, math, re
 from collections import defaultdict
 
 def precook(s, n=4, out=False):
@@ -56,10 +57,10 @@ def cook_refs(refs, eff=None, n=4): ## lhuang: oracle will call with "average"
 
     return (reflen, maxcounts)
 
-def cook_test(test, ref_len_counts, eff=None, n=4):
+def cook_test(test, reflen, refmaxcounts, eff=None, n=4):
     '''Takes a test sentence and returns an object that
     encapsulates everything that BLEU needs to know about it.'''
-    (reflen, refmaxcounts) = ref_len_counts
+
     testlen, counts = precook(test, n, True)
 
     result = {}
@@ -111,7 +112,7 @@ class BleuScorer(object):
         if refs is not None:
             self.crefs.append(cook_refs(refs))
             if test is not None:
-                cooked_test = cook_test(test, self.crefs[-1])
+                cooked_test = cook_test(test, *self.crefs[-1])
                 self.ctest.append(cooked_test) ## N.B.: -1
             else:
                 self.ctest.append(None) # lens of crefs and ctest have to match
@@ -143,7 +144,7 @@ class BleuScorer(object):
         assert len(new_test) == len(self.crefs), new_test
         self.ctest = []
         for t, rs in zip(new_test, self.crefs):
-            self.ctest.append(cook_test(t, rs))
+            self.ctest.append(cook_test(t, *rs))
         self._score = None
 
         return self
@@ -256,9 +257,7 @@ class BleuScorer(object):
 
         if verbose > 0:
             print(totalcomps)
-            print("ratio:", ratio)
+            print("ratio:%f"%ratio)
 
-        # Normalize to percentage
-        bleus = [100*b for b in bleus]
         self._score = bleus
         return self._score, bleu_list

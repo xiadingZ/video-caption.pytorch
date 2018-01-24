@@ -38,7 +38,7 @@ all default options are defined in opt.py or corresponding code file, change it 
     this steps take about 3 hours for msr-vtt datasets use one titan XP gpu
 
 ```bash
-python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50 --gpu 0,1 --saved_model data/save_cnn/cnn_model_50.pth
+python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50 --gpu 0,1
 
 python prepro_vocab.py
 ```
@@ -59,7 +59,7 @@ python eval.py --recover_opt data/save5/opt_info.json --saved_model data/save5/m
 
 ## Metrics
 
-I fork the [coco-caption](https://github.com/tylin/coco-caption) and port it to python3, but `meteor` doesn't work. Welcome to talk to me about that.
+I fork the [coco-caption XgDuan](https://github.com/XgDuan/coco-caption/tree/python3). Thanks to port it to python3.
 
 ## welcome pull request
 

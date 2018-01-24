@@ -13,9 +13,9 @@ sys.path.append('coco-caption')
 from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.rouge.rouge import Rouge
 from pycocoevalcap.cider.cider import Cider
-#from pycocoevalcap.meteor.meteor import Meteor
+from pycocoevalcap.meteor.meteor import Meteor
 from pycocoevalcap.tokenizer.ptbtokenizer import PTBTokenizer
-
+from pycocoevalcap.spice.spice import Spice
 # Define a context manager to suppress stdout and stderr.
 
 
@@ -74,9 +74,10 @@ class COCOScorer(object):
         print('setting up scorers...')
         scorers = [
             (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-            #(Meteor(),"METEOR"),
+            (Meteor(),"METEOR"),
             (Rouge(), "ROUGE_L"),
-            (Cider(), "CIDEr")
+            (Cider(), "CIDEr"),
+            #(Spice(), "SPICE")
         ]
 
         # =================================================

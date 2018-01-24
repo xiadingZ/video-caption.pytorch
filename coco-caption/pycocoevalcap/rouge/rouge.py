@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# 
 # File Name : rouge.py
 #
 # Description : Computes ROUGE-L metric as described by Lin and Hovey (2004)
@@ -7,6 +8,7 @@
 # Author : Ramakrishna Vedantam <vrama91@vt.edu>
 
 import numpy as np
+import pdb
 
 def my_lcs(string, sub):
     """
@@ -80,8 +82,11 @@ class Rouge():
         :param ref_for_image: dict : reference MS-COCO sentences with "image name" key and "tokenized sentences" as values
         :returns: average_score: float (mean ROUGE-L score computed by averaging scores for all the images)
         """
+        assert(sorted(gts.keys()) == sorted(res.keys()))
+        imgIds = sorted(gts.keys())
+
         score = []
-        for id in sorted(gts.keys()):
+        for id in imgIds:
             hypo = res[id]
             ref  = gts[id]
 
@@ -91,7 +96,7 @@ class Rouge():
             assert(type(hypo) is list)
             assert(len(hypo) == 1)
             assert(type(ref) is list)
-            assert(len(ref) > 0)
+            assert(len(ref) >= 1)
 
         average_score = np.mean(np.array(score))
         return average_score, np.array(score)
