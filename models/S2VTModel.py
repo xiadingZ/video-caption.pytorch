@@ -7,7 +7,7 @@ from torch.autograd import Variable
 
 class S2VTModel(nn.Module):
     def __init__(self, vocab_size, max_len, dim_hidden, dim_word, dim_vid=2048, sos_id=1, eos_id=0,
-                 n_layers=1, rnn_cell='gru', rnn_dropout_p=0.2, use_attention=False):
+                 n_layers=1, rnn_cell='gru', rnn_dropout_p=0.2):
         super().__init__()
         if rnn_cell.lower() == 'lstm':
             self.rnn_cell = nn.LSTM
@@ -23,7 +23,6 @@ class S2VTModel(nn.Module):
         self.dim_hidden = dim_hidden
         self.dim_word = dim_word
         self.max_length = max_len
-        self.use_attention = use_attention
         self.sos_id = sos_id
         self.eos_id = eos_id
         self.embedding = nn.Embedding(self.dim_output, self.dim_word)
@@ -31,11 +30,10 @@ class S2VTModel(nn.Module):
         self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
     def forward(self, vid_feats, target_variable=None,
-                teacher_forcing_ratio=1):
+                mode='train', opt={}):
         batch_size, n_frames, _ = vid_feats.shape
-        padding_words = vid_feats.new(batch_size, 1, self.dim_word).zero_()
-        padding_frames = vid_feats.new(batch_size, 1, self.dim_vid).zero_()
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
+        padding_words = Variable(vid_feats.data.new(batch_size, 1, self.dim_word)).zero_()
+        padding_frames = Variable(vid_feats.data.new(batch_size, 1, self.dim_vid)).zero_()
         state1 = None
         state2 = None
         for i in range(n_frames):
@@ -48,7 +46,7 @@ class S2VTModel(nn.Module):
 
         seq_probs = []
         seq_preds = []
-        if use_teacher_forcing:
+        if mode == 'train':
             for i in range(self.max_length - 1):
                 # <eos> doesn't input to the network
                 current_words = self.embedding(target_variable[:, i])

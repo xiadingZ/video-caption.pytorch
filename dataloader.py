@@ -73,21 +73,25 @@ class VideoDataset(Dataset):
         label = torch.zeros(self.max_len)
         mask = torch.zeros(self.max_len)
         captions = self.captions['video' + str(ix)]['final_captions']
+        gts = torch.zeros(len(captions), self.max_len).long()
+        for i, cap in enumerate(captions):
+            if len(cap) > self.max_len:
+                cap = cap[:self.max_len]
+                cap[-1] = '<eos>'
+            for j, w in enumerate(cap):
+                gts[i, j] = self.word_to_ix[w]
+
         # random select a caption for this video
         cap_ix = random.randint(0, len(captions) - 1)
-        cap = captions[cap_ix]
-        if len(cap) > self.max_len:
-            cap = cap[:self.max_len]
-            cap[-1] = '<eos>'
-
-        for i, w in enumerate(cap):
-            label[i] = self.word_to_ix[w]
-            mask[i] = 1
+        label = gts[cap_ix]
+        non_zero = (label == 0).nonzero()
+        mask[:int(non_zero[0]) + 1] = 1
 
         data = {}
         data['fc_feats'] = torch.from_numpy(fc_feat)
         data['labels'] = label
         data['masks'] = mask
+        data['gts'] = gts
         data['video_ids'] = 'video' + str(ix)
         return data
 

@@ -5,7 +5,7 @@ recommend installing pytorch and python packages using Anaconda
 ## requirements
 
 - cuda
-- pytorch (compiled from master, 0.4.0)
+- pytorch 0.3.1
 - python3
 - ffmpeg (can install using anaconda)
 

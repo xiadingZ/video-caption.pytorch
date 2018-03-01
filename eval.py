@@ -41,12 +41,11 @@ def test(model, crit, dataset, vocab, opt):
         labels = Variable(data['labels']).long().cuda()
         masks = Variable(data['masks']).cuda()
         video_ids = data['video_ids']
-        with torch.no_grad():
-            # forward the model to also get generated samples for each image
-            seq_probs, seq_preds = model(
-                fc_feats, labels, teacher_forcing_ratio=0)
-            loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
-            test_loss = loss.data[0]
+      
+        # forward the model to also get generated samples for each image
+        seq_probs, seq_preds = model(
+            fc_feats, mode='inference', opt=opt)
+        print(seq_preds)
 
         sents = utils.decode_sequence(vocab, seq_preds)
 
@@ -108,6 +107,12 @@ if __name__ == '__main__':
                         help='gpu device number')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='minibatch size')
+    parser.add_argument('--sample_max', type=int, default=1,
+                        help='0/1. whether sample max probs  to get next word in inference stage')
+    parser.add_argument('--temperature', type=float, default=1.0)
+    parser.add_argument('--beam_size', type=int, default=1,
+                        help='used when sample_max = 1. Usually 2 or 3 works well.')
+
     args = parser.parse_args()
     args = vars((args))
     opt = json.load(open(args["recover_opt"]))

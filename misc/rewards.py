@@ -28,7 +28,7 @@ def get_self_critical_reward(model, fc_feats, data, gen_result):
 
     # get greedy decoding baseline
     with torch.no_grad():
-        greedy_res, _ = model.sample(fc_feats)
+        _, greedy_res = model(fc_feats, mode='inference')
 
     res = OrderedDict()
 
@@ -41,7 +41,8 @@ def get_self_critical_reward(model, fc_feats, data, gen_result):
 
     gts = OrderedDict()
     for i in range(data['gts'].size(0)):
-        gts[i] = [array_to_str(data['gts'][i][j]) for j in range(data['gts'].size(1))]
+        gts[i] = [array_to_str(data['gts'][i][j])
+                  for j in range(data['gts'].size(1))]
 
     res = [{'image_id': i, 'caption': res[i]} for i in range(2 * batch_size)]
     gts = {i: gts[i % batch_size] for i in range(2 * batch_size)}

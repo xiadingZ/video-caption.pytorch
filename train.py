@@ -34,18 +34,20 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
             fc_feats = Variable(data['fc_feats']).cuda()
             labels = Variable(data['labels']).long().cuda()
             masks = Variable(data['masks']).cuda()
+
+            optimizer.zero_grad()
             if not sc_flag:
-                seq_probs, _ = model(fc_feats, labels)
+                seq_probs, _ = model(fc_feats, labels, 'train')
                 loss = crit(seq_probs, labels[:, 1:], masks[:, 1:])
             else:
-                seq_probs, seq_preds = model(fc_feats)
-                # print(gen_result)
+                seq_probs, seq_preds = model(
+                    fc_feats, mode='inference', opt=opt)
                 reward = get_self_critical_reward(
                     model, fc_feats, data, seq_preds)
+                print(reward.shape)
                 loss = rl_crit(seq_probs, seq_preds, Variable(
                     torch.from_numpy(reward).float().cuda()))
 
-            optimizer.zero_grad()
             loss.backward()
             utils.clip_gradient(optimizer, opt["grad_clip"])
             optimizer.step()
@@ -77,7 +79,7 @@ def main(opt):
         dataset, batch_size=opt["batch_size"], shuffle=True)
     opt["vocab_size"] = dataset.get_vocab_size()
     if opt["model"] == 'S2VTModel':
-        model = S2VTModel(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"],
+        model = S2VTModel(opt["vocab_size"], opt["max_len"], opt["dim_hidden"], opt["dim_word"], opt['dim_vid'],
                           rnn_dropout_p=opt["rnn_dropout_p"]).cuda()
     elif opt["model"] == "S2VTAttModel":
         encoder = EncoderRNN(opt["dim_vid"], opt["dim_hidden"], bidirectional=opt["bidirectional"],

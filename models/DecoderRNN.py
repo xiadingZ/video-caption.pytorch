@@ -45,11 +45,16 @@ class DecoderRNN(nn.Module):
             self.rnn_cell = nn.GRU
         self.rnn = self.rnn_cell(self.dim_hidden + dim_word, self.dim_hidden, n_layers,
                                  batch_first=True, dropout=rnn_dropout_p)
+
         self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
         self._init_hidden()
 
-    def forward(self, encoder_outputs, encoder_hidden, targets=None, teacher_forcing_ratio=1):
+    def sample_beam(self, encoder_outputs, encoder_hidden):
+        # TODO
+        pass
+
+    def forward(self, encoder_outputs, encoder_hidden, targets=None, mode='train', opt={}):
         """
 
         Inputs: inputs, encoder_hidden, encoder_outputs, function, teacher_forcing_ratio
@@ -57,65 +62,82 @@ class DecoderRNN(nn.Module):
           hidden state `h` of encoder. Used as the initial hidden state of the decoder. (default `None`)
         - **encoder_outputs** (batch, seq_len, dim_hidden * num_directions): (default is `None`).
         - **targets** (batch, max_length): targets labels of the ground truth sentences
-        - **teacher_forcing_ratio** (float): The probability that teacher forcing will be used.
 
         Outputs: seq_probs,
         - **seq_probs** (batch_size, max_length, vocab_size): tensors containing the outputs of the decoding function.
         - **seq_preds** (batch_size, max_length): predicted symbols
         """
+        sample_max = opt.get('sample_max', 1)
+        beam_size = opt.get('beam_size', 1)
+        temperature = opt.get('temperature', 1.0)
+
         batch_size, _, _ = encoder_outputs.size()
         decoder_hidden = self._init_rnn_state(encoder_hidden)
-
-        use_teacher_forcing = True if random.random() < teacher_forcing_ratio else False
 
         seq_probs = []
         seq_preds = []
 
-        if use_teacher_forcing:
+        if mode == 'train':
             # use targets as rnn inputs
             for i in range(self.max_length - 1):
                 current_words = self.embedding(targets[:, i])
-                if decoder_hidden is None:
-                    context = torch.mean(encoder_outputs, dim=1)
-                else:
-                    context = self.attention(
-                        decoder_hidden.squeeze(0), encoder_outputs)
+                context = self.attention(
+                    decoder_hidden.squeeze(0), encoder_outputs)
                 decoder_input = torch.cat(
                     [current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
                 self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
-                logits = self.out(decoder_output.squeeze(1))
-                logits = F.log_softmax(logits, dim=1)
-                seq_probs.append(logits.unsqueeze(1))
+                logprobs = F.log_softmax(
+                    self.out(decoder_output.squeeze(1)), dim=1)
+                seq_probs.append(logprobs.unsqueeze(1))
+
             seq_probs = torch.cat(seq_probs, 1)
 
-        else:
-            # <sos> as initial input
-            current_words = Variable(torch.LongTensor(
-                [self.sos_id] * batch_size)).cuda()
-            current_words = self.embedding(current_words)
-            for i in range(self.max_length - 1):
-                if decoder_hidden is None:
-                    context = torch.mean(encoder_outputs, dim=1)
+        elif mode == 'inference':
+            if beam_size > 1:
+                return self.sample_beam(encoder_outputs, decoder_hidden, opt)
+
+            for t in range(self.max_length - 1):
+                context = self.attention(
+                    decoder_hidden.squeeze(0), encoder_outputs)
+
+                if t == 0:  # input <bos>
+                    it = Variable(torch.LongTensor(
+                        [self.sos_id] * batch_size)).cuda()
+                elif sample_max:
+                    sampleLogprobs, it = torch.max(logprobs, 1)
+                    seq_probs.append(sampleLogprobs.view(-1, 1))
+                    it = it.view(-1).long()
+
                 else:
-                    context = self.attention(
-                        decoder_hidden.squeeze(0), encoder_outputs)
-                decoder_input = torch.cat(
-                    [current_words, context], dim=1)
-                decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
+                    # sample according to distribuition
+                    if temperature == 1.0:
+                        prob_prev = torch.exp(logprobs)
+                    else:
+                        # scale logprobs by temperature
+                        prob_prev = torch.exp(
+                            torch.div(logprobs, temperature))
+                    it = torch.multinomial(prob_prev, 1).cuda()
+                    sampleLogprobs = logprobs.gather(1, Variable(it))
+                    seq_probs.append(sampleLogprobs.view(-1, 1))
+                    it = it.view(-1).long()
+
+                seq_preds.append(it.view(-1, 1))
+
+                xt = self.embedding(it)
+                decoder_input = torch.cat([xt, context], dim=1)
+                decoder_input = self.input_dropout(
+                    decoder_input).unsqueeze(1)
                 self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
-                logits = self.out(decoder_output.squeeze(1))
-                logits = F.log_softmax(logits, dim=1)
-                seq_probs.append(logits.unsqueeze(1))
-                _, preds = torch.max(logits, 1)
-                current_words = self.embedding(preds)
-                seq_preds.append(preds.unsqueeze(1))
+                logprobs = F.log_softmax(
+                    self.out(decoder_output.squeeze(1)), dim=1)
+
             seq_probs = torch.cat(seq_probs, 1)
-            seq_preds = torch.cat(seq_preds, 1)
+            seq_preds = torch.cat(seq_preds[1:], 1)
 
         return seq_probs, seq_preds
 

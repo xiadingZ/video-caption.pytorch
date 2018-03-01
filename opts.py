@@ -27,7 +27,7 @@ def parse_opt():
     parser.add_argument("--bidirectional", action='store_true', default=False,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
-    parser.add_argument('--dim_hidden', type=int, default=1024,
+    parser.add_argument('--dim_hidden', type=int, default=512,
                         help='size of the rnn hidden layer')
     parser.add_argument('--num_layers', type=int, default=1,
                         help='number of layers in the RNN')
@@ -43,6 +43,7 @@ def parse_opt():
 
     # Optimization: General
 
+
     parser.add_argument('--epochs', type=int, default=6001,
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,
@@ -53,8 +54,6 @@ def parse_opt():
     parser.add_argument('--self_crit_after', type=int, default=-1,
                         help='After what epoch do we start finetuning the CNN? \
                         (-1 = disable; never finetune, 0 = finetune from start)')
-    parser.add_argument('--beam_size', type=int, default=1,
-                        help='used when sample_max = 1. Usually 2 or 3 works well.')
 
     parser.add_argument('--learning_rate', type=float, default=4e-4,
                         help='learning rate')
