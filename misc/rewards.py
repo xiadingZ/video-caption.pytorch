@@ -27,8 +27,7 @@ def get_self_critical_reward(model, fc_feats, data, gen_result):
     batch_size = gen_result.size(0)
 
     # get greedy decoding baseline
-    with torch.no_grad():
-        _, greedy_res = model(fc_feats, mode='inference')
+    _, greedy_res = model(fc_feats, mode='inference')
 
     res = OrderedDict()
 

@@ -25,7 +25,7 @@ class DecoderRNN(nn.Module):
 
     def __init__(self, vocab_size, max_len, dim_hidden, dim_word,
                  n_layers=1, rnn_cell='gru', bidirectional=False,
-                 input_dropout_p=0, rnn_dropout_p=0.1):
+                 input_dropout_p=0.1, rnn_dropout_p=0.1):
         super().__init__()
 
         self.bidirectional_encoder = bidirectional
@@ -48,11 +48,7 @@ class DecoderRNN(nn.Module):
 
         self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
-        self._init_hidden()
-
-    def sample_beam(self, encoder_outputs, encoder_hidden):
-        # TODO
-        pass
+        self._init_weights()
 
     def forward(self, encoder_outputs, encoder_hidden, targets=None, mode='train', opt={}):
         """
@@ -64,7 +60,7 @@ class DecoderRNN(nn.Module):
         - **targets** (batch, max_length): targets labels of the ground truth sentences
 
         Outputs: seq_probs,
-        - **seq_probs** (batch_size, max_length, vocab_size): tensors containing the outputs of the decoding function.
+        - **seq_logprobs** (batch_size, max_length, vocab_size): tensors containing the outputs of the decoding function.
         - **seq_preds** (batch_size, max_length): predicted symbols
         """
         sample_max = opt.get('sample_max', 1)
@@ -74,7 +70,7 @@ class DecoderRNN(nn.Module):
         batch_size, _, _ = encoder_outputs.size()
         decoder_hidden = self._init_rnn_state(encoder_hidden)
 
-        seq_probs = []
+        seq_logprobs = []
         seq_preds = []
 
         if mode == 'train':
@@ -91,9 +87,9 @@ class DecoderRNN(nn.Module):
                     decoder_input, decoder_hidden)
                 logprobs = F.log_softmax(
                     self.out(decoder_output.squeeze(1)), dim=1)
-                seq_probs.append(logprobs.unsqueeze(1))
+                seq_logprobs.append(logprobs.unsqueeze(1))
 
-            seq_probs = torch.cat(seq_probs, 1)
+            seq_logprobs = torch.cat(seq_logprobs, 1)
 
         elif mode == 'inference':
             if beam_size > 1:
@@ -108,7 +104,7 @@ class DecoderRNN(nn.Module):
                         [self.sos_id] * batch_size)).cuda()
                 elif sample_max:
                     sampleLogprobs, it = torch.max(logprobs, 1)
-                    seq_probs.append(sampleLogprobs.view(-1, 1))
+                    seq_logprobs.append(sampleLogprobs.view(-1, 1))
                     it = it.view(-1).long()
 
                 else:
@@ -121,7 +117,7 @@ class DecoderRNN(nn.Module):
                             torch.div(logprobs, temperature))
                     it = torch.multinomial(prob_prev, 1).cuda()
                     sampleLogprobs = logprobs.gather(1, Variable(it))
-                    seq_probs.append(sampleLogprobs.view(-1, 1))
+                    seq_logprobs.append(sampleLogprobs.view(-1, 1))
                     it = it.view(-1).long()
 
                 seq_preds.append(it.view(-1, 1))
@@ -136,13 +132,13 @@ class DecoderRNN(nn.Module):
                 logprobs = F.log_softmax(
                     self.out(decoder_output.squeeze(1)), dim=1)
 
-            seq_probs = torch.cat(seq_probs, 1)
+            seq_logprobs = torch.cat(seq_logprobs, 1)
             seq_preds = torch.cat(seq_preds[1:], 1)
 
-        return seq_probs, seq_preds
+        return seq_logprobs, seq_preds
 
-    def _init_hidden(self):
-        """ init the weight of linear layer
+    def _init_weights(self):
+        """ init the weight of some layers
         """
         nn.init.xavier_normal(self.out.weight)
 

@@ -96,24 +96,22 @@ if __name__ == '__main__':
                         default='data/coco_labels.json', help='path to processed coco caption json')
     parser.add_argument('--coco_dir', type=str,
                         default='data/mscoco/train2014')
-    parser.add_argument('--epochs', type=int, default=3000,
+    parser.add_argument('--epochs', type=int, default=100,
                         help='number of epochs')
     parser.add_argument('--checkpoint_path', type=str,
                         help='path to trained model')
     parser.add_argument("--gpu", dest='gpu', type=str, default='0',
                         help='Set CUDA_VISIBLE_DEVICES environment variable, optional')
-    parser.add_argument("--model", dest="model", type=str, default='inception_v4',
+    parser.add_argument("--model", dest="model", type=str, default='resnet152',
                         help='the CNN model you want to use to extract_feats')
-    parser.add_argument('--dim_image', dest='dim_vid', type=int, default=1536,
-                        help='dim of frames images extracted by cnn model')
 
     parser.add_argument('--save_checkpoint_every', type=int, default=20,
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--batch_size', type=int, default=512)
-    parser.add_argument('--learning_rate', type=float, default=4e-4,
+    parser.add_argument('--learning_rate', type=float, default=1e-4,
                         help='learning rate')
 
-    parser.add_argument('--learning_rate_decay_every', type=int, default=20,
+    parser.add_argument('--learning_rate_decay_every', type=int, default=2,
                         help='every how many iterations thereafter to drop LR?(in epoch)')
     parser.add_argument('--learning_rate_decay_rate', type=float, default=0.8)
     parser.add_argument('--optim_alpha', type=float, default=0.9,

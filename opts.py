@@ -24,7 +24,7 @@ def parse_opt():
 
     parser.add_argument("--max_len", type=int, default=28,
                         help='max length of captions(containing <sos>,<eos>)')
-    parser.add_argument("--bidirectional", action='store_true', default=False,
+    parser.add_argument("--bidirectional", type = int, default=0,
                         help="0 for disable, 1 for enable. encoder/decoder bidirectional.")
 
     parser.add_argument('--dim_hidden', type=int, default=512,
@@ -48,7 +48,7 @@ def parse_opt():
                         help='number of epochs')
     parser.add_argument('--batch_size', type=int, default=128,
                         help='minibatch size')
-    parser.add_argument('--grad_clip', type=float, default=0.1,  # 5.,
+    parser.add_argument('--grad_clip', type=float, default=5,  # 5.,
                         help='clip gradients at this value')
 
     parser.add_argument('--self_crit_after', type=int, default=-1,
