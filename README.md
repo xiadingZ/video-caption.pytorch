@@ -60,7 +60,3 @@ python eval.py --recover_opt data/save5/opt_info.json --saved_model data/save5/m
 ## Metrics
 
 I fork the [coco-caption XgDuan](https://github.com/XgDuan/coco-caption/tree/python3). Thanks to port it to python3.
-
-## welcome pull request
-
-now the score is very low, still don't know the reason, welcome to talk to me about it

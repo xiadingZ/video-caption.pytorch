@@ -31,8 +31,8 @@ def get_self_critical_reward(model, fc_feats, data, gen_result):
 
     res = OrderedDict()
 
-    gen_result = gen_result.cpu().numpy()
-    greedy_res = greedy_res.cpu().numpy()
+    gen_result = gen_result.cpu().data.numpy()
+    greedy_res = greedy_res.cpu().data.numpy()
     for i in range(batch_size):
         res[i] = [array_to_str(gen_result[i])]
     for i in range(batch_size):

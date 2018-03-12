@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.autograd import Variable
 
 
 # Input: seq, N*D numpy array, with element 0 .. vocab_size. 0 is END token.
@@ -36,7 +37,7 @@ class RewardCriterion(nn.Module):
         input = to_contiguous(input).view(-1)
         reward = to_contiguous(reward).view(-1)
         mask = (seq > 0).float()
-        mask = to_contiguous(torch.cat([mask.new(mask.size(0), 1).fill_(1),
+        mask = to_contiguous(torch.cat([Variable(mask.data.new(mask.size(0), 1).fill_(1)).cuda(),
                                         mask[:, :-1]], 1)).view(-1)
         output = - input * reward * mask
         output = torch.sum(output) / torch.sum(mask)

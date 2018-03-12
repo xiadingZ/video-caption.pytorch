@@ -14,6 +14,28 @@ from pretrainedmodels import utils
 C, H, W = 3, 224, 224
 
 
+class MILModel(nn.Module):
+    def __init__(self, cnn_model, dim_hidden, num_classes):
+        super().__init__()
+        self.cnn_model = cnn_model
+        self.num_classes = num_classes
+        self.dim_hidden = dim_hidden
+        self.linear = nn.Linear(dim_hidden, num_classes)
+
+    def forward(self, x):
+        feature_map = self.cnn_model.features(x)
+        feature_map = feature_map.permute(0, 2, 3, 1)
+        b, x, y, h = feature_map.size()
+        feature_map = feature_map.contiguous().view(b, x * y, h)
+        logits = self.linear(feature_map)
+        logits = 1 - logits
+        probs = Variable(torch.ones(logits.shape[0], logits.shape[2])).cuda()
+        for i in range(x * y):
+            probs = probs * logits[:, i, :]
+        probs = 1 - probs
+        return probs
+
+
 def train(dataloader, model, crit, optimizer, lr_scheduler, load_image_fn, params):
     model.train()
     model = nn.DataParallel(model)
@@ -71,7 +93,7 @@ def main(args):
 
     load_image_fn = utils.LoadTransformImage(model)
     dim_feats = model.last_linear.in_features
-    model.last_linear = nn.Linear(dim_feats, num_classes)
+    model = MILModel(model, dim_feats, num_classes)
     model = model.cuda()
     dataset = CocoDataset(coco_labels)
     dataloader = DataLoader(
@@ -108,7 +130,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_checkpoint_every', type=int, default=20,
                         help='how often to save a model checkpoint (in epoch)?')
     parser.add_argument('--batch_size', type=int, default=512)
-    parser.add_argument('--learning_rate', type=float, default=1e-4,
+    parser.add_argument('--learning_rate', type=float, default=1e-5,
                         help='learning rate')
 
     parser.add_argument('--learning_rate_decay_every', type=int, default=2,
