@@ -38,7 +38,7 @@ all default options are defined in opt.py or corresponding code file, change it 
     this steps take about 3 hours for msr-vtt datasets use one titan XP gpu
 
 ```bash
-python prepro_feats.py --output_dir data/feats/incepv4 --model inception_v4 --dim_vid 1536 --n_frame_steps 50 --gpu 0,1
+python prepro_feats.py --output_dir data/feats/resnet152 --model resnet152 --n_frame_steps 40 --gpu 0,1
 
 python prepro_vocab.py
 ```
@@ -46,7 +46,7 @@ python prepro_vocab.py
 2. Training a model
 
 ```bash
-python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save7 --feats_dir data/feats/incepv4 --rnn_dropout_p 0.1 --dim_hidden 1024 --dim_word 512 --dim_vid 1536 --model S2VTAttModel
+python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save --feats_dir data/feats/resnet152 --dim_vid 2048 --model S2VTAttModel
 ```
 
 3. test
@@ -54,7 +54,7 @@ python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path dat
     opt_info.json will be in same directory as saved model.
 
 ```bash
-python eval.py --recover_opt data/save5/opt_info.json --saved_model data/save5/model_300.pth --batch_size 10 --gpu 1,0
+python eval.py --recover_opt data/save/opt_info.json --saved_model data/save/model_1000.pth --batch_size 100 --gpu 1,0
 ```
 
 ## Metrics

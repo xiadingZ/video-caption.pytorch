@@ -56,7 +56,6 @@ def extract_feats(params, model, load_image_fn):
             img = load_image_fn(image_list[iImg])
             images[iImg] = img
         fc_feats = model(Variable(images).cuda()).squeeze()
-        assert fc_feats.shape[-1] == params['dim_vid'], "extracted features dim doesn't match the opts"
         img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
         outfile = os.path.join(dir_fc, video_id + '.npy')
@@ -80,8 +79,6 @@ if __name__ == '__main__':
                         help='the CNN model you want to use to extract_feats')
     parser.add_argument("--saved_model", dest="saved_model", type=str, default='',
                         help='the pretrained CNN model you want to use to extract_feats')
-    parser.add_argument('--dim_vid', dest='dim_vid', type=int, default=2048,
-                        help='dim of frames images extracted by cnn model')
 
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
