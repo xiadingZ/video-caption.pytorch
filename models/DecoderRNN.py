@@ -23,9 +23,16 @@ class DecoderRNN(nn.Module):
 
     """
 
-    def __init__(self, vocab_size, max_len, dim_hidden, dim_word,
-                 n_layers=1, rnn_cell='gru', bidirectional=False,
-                 input_dropout_p=0.1, rnn_dropout_p=0.1):
+    def __init__(self,
+                 vocab_size,
+                 max_len,
+                 dim_hidden,
+                 dim_word,
+                 n_layers=1,
+                 rnn_cell='gru',
+                 bidirectional=False,
+                 input_dropout_p=0.1,
+                 rnn_dropout_p=0.1):
         super().__init__()
 
         self.bidirectional_encoder = bidirectional
@@ -43,14 +50,23 @@ class DecoderRNN(nn.Module):
             self.rnn_cell = nn.LSTM
         elif rnn_cell.lower() == 'gru':
             self.rnn_cell = nn.GRU
-        self.rnn = self.rnn_cell(self.dim_hidden + dim_word, self.dim_hidden, n_layers,
-                                 batch_first=True, dropout=rnn_dropout_p)
+        self.rnn = self.rnn_cell(
+            self.dim_hidden + dim_word,
+            self.dim_hidden,
+            n_layers,
+            batch_first=True,
+            dropout=rnn_dropout_p)
 
         self.out = nn.Linear(self.dim_hidden, self.dim_output)
 
         self._init_weights()
 
-    def forward(self, encoder_outputs, encoder_hidden, targets=None, mode='train', opt={}):
+    def forward(self,
+                encoder_outputs,
+                encoder_hidden,
+                targets=None,
+                mode='train',
+                opt={}):
         """
 
         Inputs: inputs, encoder_hidden, encoder_outputs, function, teacher_forcing_ratio
@@ -77,10 +93,9 @@ class DecoderRNN(nn.Module):
             # use targets as rnn inputs
             for i in range(self.max_length - 1):
                 current_words = self.embedding(targets[:, i])
-                context = self.attention(
-                    decoder_hidden.squeeze(0), encoder_outputs)
-                decoder_input = torch.cat(
-                    [current_words, context], dim=1)
+                
+                context = self.attention(decoder_hidden.squeeze(0), encoder_outputs)
+                decoder_input = torch.cat([current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
                 self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
@@ -113,8 +128,7 @@ class DecoderRNN(nn.Module):
                         prob_prev = torch.exp(logprobs)
                     else:
                         # scale logprobs by temperature
-                        prob_prev = torch.exp(
-                            torch.div(logprobs, temperature))
+                        prob_prev = torch.exp(torch.div(logprobs, temperature))
                     it = torch.multinomial(prob_prev, 1).cuda()
                     sampleLogprobs = logprobs.gather(1, Variable(it))
                     seq_logprobs.append(sampleLogprobs.view(-1, 1))
@@ -124,8 +138,7 @@ class DecoderRNN(nn.Module):
 
                 xt = self.embedding(it)
                 decoder_input = torch.cat([xt, context], dim=1)
-                decoder_input = self.input_dropout(
-                    decoder_input).unsqueeze(1)
+                decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
                 self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
@@ -147,8 +160,8 @@ class DecoderRNN(nn.Module):
         if encoder_hidden is None:
             return None
         if isinstance(encoder_hidden, tuple):
-            encoder_hidden = tuple([self._cat_directions(h)
-                                    for h in encoder_hidden])
+            encoder_hidden = tuple(
+                [self._cat_directions(h) for h in encoder_hidden])
         else:
             encoder_hidden = self._cat_directions(encoder_hidden)
         return encoder_hidden

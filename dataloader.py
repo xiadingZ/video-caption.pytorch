@@ -8,6 +8,7 @@ from torch.utils.data import Dataset
 
 
 class CocoDataset(Dataset):
+
     def __init__(self, coco_labels):
         super().__init__()
         self.coco_labels = list(coco_labels['labels'].items())
@@ -53,6 +54,8 @@ class VideoDataset(Dataset):
         print('number of test videos: ', len(self.splits['test']))
 
         self.feats_dir = opt["feats_dir"]
+        self.c3d_feats_dir = opt['c3d_feats_dir']
+        self.with_c3d = opt['with_c3d']
         print('load feats from %s' % (self.feats_dir))
         # load in the sequence data
         self.max_len = opt["max_len"]
@@ -66,13 +69,14 @@ class VideoDataset(Dataset):
             ix += len(self.splits['train'])
         elif self.mode == 'test':
             ix = ix + len(self.splits['train']) + len(self.splits['val'])
-
-        fc_feat = np.load(os.path.join(self.feats_dir,
-                                       'video' + str(ix) + '.npy'))
-
+        
+        fc_feat = np.load(os.path.join(self.feats_dir, 'video%i.npy' % (ix)))
+        if self.with_c3d == 1:
+            c3d_feat = np.load(os.path.join(self.c3d_feats_dir, 'video%i.npy'%(ix)))
+            fc_feat = np.concatenate((fc_feat, np.tile(c3d_feat, (fc_feat.shape[0], 1))), axis=1)
         label = torch.zeros(self.max_len)
         mask = torch.zeros(self.max_len)
-        captions = self.captions['video' + str(ix)]['final_captions']
+        captions = self.captions['video%i'%(ix)]['final_captions']
         gts = torch.zeros(len(captions), self.max_len).long()
         for i, cap in enumerate(captions):
             if len(cap) > self.max_len:
@@ -88,11 +92,11 @@ class VideoDataset(Dataset):
         mask[:int(non_zero[0]) + 1] = 1
 
         data = {}
-        data['fc_feats'] = torch.from_numpy(fc_feat)
+        data['fc_feats'] = torch.from_numpy(fc_feat).type(torch.FloatTensor)
         data['labels'] = label
         data['masks'] = mask
         data['gts'] = gts
-        data['video_ids'] = 'video' + str(ix)
+        data['video_ids'] = 'video%i'%(ix)
         return data
 
     def __len__(self):

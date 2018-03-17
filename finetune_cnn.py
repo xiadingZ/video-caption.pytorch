@@ -118,7 +118,7 @@ if __name__ == '__main__':
                         default='data/coco_labels.json', help='path to processed coco caption json')
     parser.add_argument('--coco_dir', type=str,
                         default='data/mscoco/train2014')
-    parser.add_argument('--epochs', type=int, default=100,
+    parser.add_argument('--epochs', type=int, default=200,
                         help='number of epochs')
     parser.add_argument('--checkpoint_path', type=str,
                         help='path to trained model')
@@ -134,7 +134,7 @@ if __name__ == '__main__':
                         help='learning rate')
 
     parser.add_argument('--learning_rate_decay_every', type=int, default=2,
-                        help='every how many iterations thereafter to drop LR?(in epoch)')
+                        help='every how many epoch thereafter to drop LR?')
     parser.add_argument('--learning_rate_decay_rate', type=float, default=0.8)
     parser.add_argument('--optim_alpha', type=float, default=0.9,
                         help='alpha for adam')

@@ -27,7 +27,7 @@ MSR-VTT. Test video doesn't have captions, so I spilit train-viedo to train/val/
 
 ## Options
 
-all default options are defined in opt.py or corresponding code file, change it for your like.
+all default options are defined in opt.py or corresponding code file, change them for your like.
 
 ## Usage
 
@@ -38,7 +38,7 @@ all default options are defined in opt.py or corresponding code file, change it 
     this steps take about 3 hours for msr-vtt datasets use one titan XP gpu
 
 ```bash
-python prepro_feats.py --output_dir data/feats/resnet152 --model resnet152 --n_frame_steps 40 --gpu 0,1
+python prepro_feats.py --output_dir data/feats/resnet152 --model resnet152 --n_frame_steps 40  --gpu 4,5
 
 python prepro_vocab.py
 ```
@@ -46,6 +46,7 @@ python prepro_vocab.py
 2. Training a model
 
 ```bash
+
 python train.py --gpu 5,6,7 --epochs 9001 --batch_size 450 --checkpoint_path data/save --feats_dir data/feats/resnet152 --dim_vid 2048 --model S2VTAttModel
 ```
 
