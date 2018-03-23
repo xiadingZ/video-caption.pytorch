@@ -31,6 +31,9 @@ all default options are defined in opt.py or corresponding code file, change the
 
 ## Usage
 
+### (Optional) c3d features
+you can use [video-classification-3d-cnn-pytorch](https://github.com/kenshohara/video-classification-3d-cnn-pytorch) to extract features from video. Then mean pool to get a 2048 dim feature for each video.
+
 ### Steps
 
 1. preprocess videos and labels
@@ -61,3 +64,11 @@ python eval.py --recover_opt data/save/opt_info.json --saved_model data/save/mod
 ## Metrics
 
 I fork the [coco-caption XgDuan](https://github.com/XgDuan/coco-caption/tree/python3). Thanks to port it to python3.
+
+## TODO
+- lstm
+- beam search
+- reinforcement learning
+
+## Note
+This repository is not maintained, please see my another repository [video-caption-openNMT.py](https://github.com/xiadingZ/video-caption-openNMT.pytorch). It has higher performence and test score.
