@@ -55,7 +55,7 @@ def extract_feats(params, model, load_image_fn):
         for iImg in range(len(image_list)):
             img = load_image_fn(image_list[iImg])
             images[iImg] = img
-        fc_feats = model(Variable(images).cuda()).squeeze()
+        fc_feats = model(Variable(images, volatile=True).cuda()).squeeze()
         img_feats = fc_feats.data.cpu().numpy()
         # Save the inception features
         outfile = os.path.join(dir_fc, video_id + '.npy')
