@@ -13,7 +13,7 @@ class EncoderRNN(nn.Module):
             n_layers (int): number of rnn layers
             rnn_cell (str): type of RNN cell ('LSTM'/'GRU')
         """
-        super().__init__()
+        super(EncoderRNN, self).__init__()
         self.dim_vid = dim_vid
         self.dim_hidden = dim_hidden
         self.input_dropout_p = input_dropout_p

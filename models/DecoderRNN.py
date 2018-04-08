@@ -33,7 +33,7 @@ class DecoderRNN(nn.Module):
                  bidirectional=False,
                  input_dropout_p=0.1,
                  rnn_dropout_p=0.1):
-        super().__init__()
+        super(DecoderRNN, self).__init__()
 
         self.bidirectional_encoder = bidirectional
 

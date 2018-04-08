@@ -16,7 +16,7 @@ C, H, W = 3, 224, 224
 
 class MILModel(nn.Module):
     def __init__(self, cnn_model, dim_hidden, num_classes):
-        super().__init__()
+        super(MILModel, self).__init__()
         self.cnn_model = cnn_model
         self.num_classes = num_classes
         self.dim_hidden = dim_hidden

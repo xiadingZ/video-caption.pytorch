@@ -9,7 +9,7 @@ class S2VTAttModel(nn.Module):
             encoder (nn.Module): Encoder rnn
             decoder (nn.Module): Decoder rnn
         """
-        super().__init__()
+        super(S2VTAttModel, self).__init__()
         self.encoder = encoder
         self.decoder = decoder
 

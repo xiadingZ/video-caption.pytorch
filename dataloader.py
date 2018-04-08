@@ -10,7 +10,7 @@ from torch.utils.data import Dataset
 class CocoDataset(Dataset):
 
     def __init__(self, coco_labels):
-        super().__init__()
+        super(CocoDataset, self).__init__()
         self.coco_labels = list(coco_labels['labels'].items())
         self.num_classes = coco_labels['num_classes']
 
@@ -39,7 +39,7 @@ class VideoDataset(Dataset):
         return self.seq_length
 
     def __init__(self, opt, mode):
-        super().__init__()
+        super(VideoDataset, self).__init__()
         self.mode = mode  # to load train/val/test data
 
         # load the json file which contains information about the dataset

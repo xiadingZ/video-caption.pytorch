@@ -9,7 +9,7 @@ class Attention(nn.Module):
     """
 
     def __init__(self, dim):
-        super().__init__()
+        super(Attention, self).__init__()
         self.dim = dim
         self.linear1 = nn.Linear(dim * 2, dim)
         self.linear2 = nn.Linear(dim, 1, bias=False)
