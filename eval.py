@@ -37,9 +37,9 @@ def test(model, crit, dataset, vocab, opt):
     samples = {}
     for data in loader:
         # forward the model to get loss
-        fc_feats = Variable(data['fc_feats']).cuda()
-        labels = Variable(data['labels']).long().cuda()
-        masks = Variable(data['masks']).cuda()
+        fc_feats = Variable(data['fc_feats'], volatile=True).cuda()
+        labels = Variable(data['labels'], volatile=True).long().cuda()
+        masks = Variable(data['masks'], volatile=True).cuda()
         video_ids = data['video_ids']
       
         # forward the model to also get generated samples for each image

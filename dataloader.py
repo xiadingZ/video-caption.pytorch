@@ -70,7 +70,10 @@ class VideoDataset(Dataset):
         elif self.mode == 'test':
             ix = ix + len(self.splits['train']) + len(self.splits['val'])
         
-        fc_feat = np.load(os.path.join(self.feats_dir, 'video%i.npy' % (ix)))
+        fc_feat = []
+        for dir in self.feats_dir:
+            fc_feat.append(np.load(os.path.join(dir, 'video%i.npy' % (ix))))
+        fc_feat = np.concatenate(fc_feat, axis=1)
         if self.with_c3d == 1:
             c3d_feat = np.load(os.path.join(self.c3d_feats_dir, 'video%i.npy'%(ix)))
             fc_feat = np.concatenate((fc_feat, np.tile(c3d_feat, (fc_feat.shape[0], 1))), axis=1)
