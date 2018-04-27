@@ -26,11 +26,11 @@ MSR-VTT. Test video doesn't have captions, so I spilit train-viedo to train/val/
 - json info of test-video: [download link](https://drive.google.com/file/d/1Kgra0uMKDQssclNZXRLfbj9UQgBv-1YE/view?usp=sharing)
 
 UPDATE: MSR-VTT. Test video have released captions. You can download the all captions from  [baiduyun pwd: nxyk](https://pan.baidu.com/s/1RDNygrWtz_PtVH8nh4vG3w). There are also many extracted features in baiduyun.
-- all_videodatainfo_2017.json: json info of train-video and test-video
-- c3d_feat: c3d_kintectics(16f) and so on
-- 2d_feat: resnet101 and nasnet
-- audio_feat: extracted by tensorflow/models/research/audioset/
-- proposal_feat: extracted by Detectron
+- **all_videodatainfo_2017.json**: json info of train-video and test-video
+- **c3d_feat**: c3d_kintectics(16f) and so on
+- **2d_feat**: resnet101 and nasnet
+- **audio_feat**: extracted by tensorflow/models/research/audioset/
+- **proposal_feat**: extracted by Detectron
 
 ## Options
 
@@ -71,12 +71,13 @@ python eval.py --recover_opt data/save/opt_info.json --saved_model data/save/mod
 I fork the [coco-caption XgDuan](https://github.com/XgDuan/coco-caption/tree/python3). Thanks to port it to python3.
 ## Leaderboard ##
 [MSR-VTT 2017 Leaderboard](http://ms-multimedia-challenge.com/2017/leaderboard)
+
 |Rank|Team|Organization|BLEU@4|Meteor|CIDEr-D |ROUGE-L|
-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|
+|-|-|-|-|-|-|-|
 |1|RUC+CMU_V2T|RUC & CMU|**0.390**|**0.255**|**0.315**|**0.542**|
 |2|TJU_Media|TJU|0.359|0.226|0.249|0.515|
 |3|NII|National Institute of Informatics|0.359|0.234|0.231|0.514|
-|our implement|model|feature|
+|**our implement**|**model**|**feature**|
 |-|s2vt|vgg19|0.2864|0.2055|0.1748|0.4774|
 |-|s2vt|resnet101|0.3118|0.2130|0.2002|0.4926|
 |-|s2vt|nasnet|0.3003|0.2176|0.2213|0.4931|
