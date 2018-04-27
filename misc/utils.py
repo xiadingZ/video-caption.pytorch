@@ -61,9 +61,3 @@ class LanguageModelCriterion(nn.Module):
         loss = self.loss_fn(logits, target)
         output = torch.sum(loss * mask) / batch_size
         return output
-
-
-def clip_gradient(optimizer, grad_clip):
-    for group in optimizer.param_groups:
-        for param in group['params']:
-            param.grad.clamp_(-grad_clip, grad_clip)

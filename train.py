@@ -7,6 +7,7 @@ import misc.utils as utils
 import opts
 import torch
 import torch.optim as optim
+from torch.nn.utils import clip_grad_value_
 from dataloader import VideoDataset
 from misc.rewards import get_self_critical_reward, init_cider_scorer
 from models import DecoderRNN, EncoderRNN, S2VTAttModel, S2VTModel
@@ -48,7 +49,7 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                                torch.from_numpy(reward).float().cuda())
 
             loss.backward()
-            utils.clip_gradient(optimizer, opt["grad_clip"])
+            clip_grad_value_(model.parameters(), opt['grad_clip'])
             optimizer.step()
             train_loss = loss.item()
             torch.cuda.synchronize()
