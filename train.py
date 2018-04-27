@@ -11,13 +11,12 @@ from dataloader import VideoDataset
 from misc.rewards import get_self_critical_reward, init_cider_scorer
 from models import DecoderRNN, EncoderRNN, S2VTAttModel, S2VTModel
 from torch import nn
-from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
 
 def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
     model.train()
-    model = nn.DataParallel(model)
+    #model = nn.DataParallel(model)
     for epoch in range(opt["epochs"]):
         lr_scheduler.step()
 
@@ -31,9 +30,9 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
 
         for data in loader:
             torch.cuda.synchronize()
-            fc_feats = Variable(data['fc_feats']).cuda()
-            labels = Variable(data['labels']).long().cuda()
-            masks = Variable(data['masks']).cuda()
+            fc_feats = data['fc_feats'].cuda()
+            labels = data['labels'].cuda()
+            masks = data['masks'].cuda()
 
             optimizer.zero_grad()
             if not sc_flag:
@@ -46,13 +45,12 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                                                   seq_preds)
                 print(reward.shape)
                 loss = rl_crit(seq_probs, seq_preds,
-                               Variable(
-                                   torch.from_numpy(reward).float().cuda()))
+                               torch.from_numpy(reward).float().cuda())
 
             loss.backward()
-            utils.clip_gradient(optimizer, opt["grad_clip"])
+            #utils.clip_gradient(optimizer, opt["grad_clip"])
             optimizer.step()
-            train_loss = loss.data[0]
+            train_loss = loss.item()
             torch.cuda.synchronize()
             iteration += 1
 
@@ -87,7 +85,7 @@ def main(opt):
             opt['dim_vid'],
             rnn_cell=opt['rnn_type'],
             n_layers=opt['num_layers'],
-            rnn_dropout_p=opt["rnn_dropout_p"]).cuda()
+            rnn_dropout_p=opt["rnn_dropout_p"])
     elif opt["model"] == "S2VTAttModel":
         encoder = EncoderRNN(
             opt["dim_vid"],
@@ -105,7 +103,8 @@ def main(opt):
             rnn_cell=opt['rnn_type'],
             rnn_dropout_p=opt["rnn_dropout_p"],
             bidirectional=opt["bidirectional"])
-        model = S2VTAttModel(encoder, decoder).cuda()
+        model = S2VTAttModel(encoder, decoder)
+    model = model.cuda()
     crit = utils.LanguageModelCriterion()
     rl_crit = utils.RewardCriterion()
     optimizer = optim.Adam(

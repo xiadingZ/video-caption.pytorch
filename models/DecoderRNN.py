@@ -2,7 +2,6 @@ import random
 
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.nn.functional as F
 
 from .Attention import Attention
@@ -88,16 +87,15 @@ class DecoderRNN(nn.Module):
 
         seq_logprobs = []
         seq_preds = []
-
+        self.rnn.flatten_parameters()
         if mode == 'train':
             # use targets as rnn inputs
+            targets_emb = self.embedding(targets)
             for i in range(self.max_length - 1):
-                current_words = self.embedding(targets[:, i])
-                
+                current_words = targets_emb[:, i, :]
                 context = self.attention(decoder_hidden.squeeze(0), encoder_outputs)
                 decoder_input = torch.cat([current_words, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
-                self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
                 logprobs = F.log_softmax(
@@ -115,8 +113,7 @@ class DecoderRNN(nn.Module):
                     decoder_hidden.squeeze(0), encoder_outputs)
 
                 if t == 0:  # input <bos>
-                    it = Variable(torch.LongTensor(
-                        [self.sos_id] * batch_size)).cuda()
+                    it = torch.LongTensor([self.sos_id] * batch_size).cuda()
                 elif sample_max:
                     sampleLogprobs, it = torch.max(logprobs, 1)
                     seq_logprobs.append(sampleLogprobs.view(-1, 1))
@@ -130,7 +127,7 @@ class DecoderRNN(nn.Module):
                         # scale logprobs by temperature
                         prob_prev = torch.exp(torch.div(logprobs, temperature))
                     it = torch.multinomial(prob_prev, 1).cuda()
-                    sampleLogprobs = logprobs.gather(1, Variable(it))
+                    sampleLogprobs = logprobs.gather(1, it)
                     seq_logprobs.append(sampleLogprobs.view(-1, 1))
                     it = it.view(-1).long()
 
@@ -139,7 +136,6 @@ class DecoderRNN(nn.Module):
                 xt = self.embedding(it)
                 decoder_input = torch.cat([xt, context], dim=1)
                 decoder_input = self.input_dropout(decoder_input).unsqueeze(1)
-                self.rnn.flatten_parameters()
                 decoder_output, decoder_hidden = self.rnn(
                     decoder_input, decoder_hidden)
                 logprobs = F.log_softmax(
@@ -153,7 +149,7 @@ class DecoderRNN(nn.Module):
     def _init_weights(self):
         """ init the weight of some layers
         """
-        nn.init.xavier_normal(self.out.weight)
+        nn.init.xavier_normal_(self.out.weight)
 
     def _init_rnn_state(self, encoder_hidden):
         """ Initialize the encoder hidden state. """

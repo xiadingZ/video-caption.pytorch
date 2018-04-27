@@ -36,7 +36,7 @@ class EncoderRNN(nn.Module):
         self._init_hidden()
 
     def _init_hidden(self):
-        nn.init.xavier_normal(self.vid2hid.weight)
+        nn.init.xavier_normal_(self.vid2hid.weight)
 
     def forward(self, vid_feats):
         """

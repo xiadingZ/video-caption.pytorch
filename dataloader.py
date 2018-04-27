@@ -7,26 +7,6 @@ import torch
 from torch.utils.data import Dataset
 
 
-class CocoDataset(Dataset):
-
-    def __init__(self, coco_labels):
-        super(CocoDataset, self).__init__()
-        self.coco_labels = list(coco_labels['labels'].items())
-        self.num_classes = coco_labels['num_classes']
-
-    def __getitem__(self, ix):
-        labels = torch.zeros(self.num_classes)
-        image_id, labels_ids = self.coco_labels[ix]
-        labels[labels_ids] = 1
-        data = {}
-        data['image_ids'] = image_id
-        data['labels'] = labels
-        return data
-
-    def __len__(self):
-        return len(self.coco_labels)
-
-
 class VideoDataset(Dataset):
 
     def get_vocab_size(self):
@@ -76,11 +56,12 @@ class VideoDataset(Dataset):
         fc_feat = np.concatenate(fc_feat, axis=1)
         if self.with_c3d == 1:
             c3d_feat = np.load(os.path.join(self.c3d_feats_dir, 'video%i.npy'%(ix)))
+            c3d_feat = np.mean(c3d_feat, axis=0, keepdims=True)
             fc_feat = np.concatenate((fc_feat, np.tile(c3d_feat, (fc_feat.shape[0], 1))), axis=1)
-        label = torch.zeros(self.max_len)
-        mask = torch.zeros(self.max_len)
+        label = np.zeros(self.max_len)
+        mask = np.zeros(self.max_len)
         captions = self.captions['video%i'%(ix)]['final_captions']
-        gts = torch.zeros(len(captions), self.max_len).long()
+        gts = np.zeros((len(captions), self.max_len))
         for i, cap in enumerate(captions):
             if len(cap) > self.max_len:
                 cap = cap[:self.max_len]
@@ -92,13 +73,13 @@ class VideoDataset(Dataset):
         cap_ix = random.randint(0, len(captions) - 1)
         label = gts[cap_ix]
         non_zero = (label == 0).nonzero()
-        mask[:int(non_zero[0]) + 1] = 1
+        mask[:int(non_zero[0][0]) + 1] = 1
 
         data = {}
         data['fc_feats'] = torch.from_numpy(fc_feat).type(torch.FloatTensor)
-        data['labels'] = label
-        data['masks'] = mask
-        data['gts'] = gts
+        data['labels'] = torch.from_numpy(label).type(torch.LongTensor)
+        data['masks'] = torch.from_numpy(mask).type(torch.FloatTensor)
+        data['gts'] = torch.from_numpy(gts).long()
         data['video_ids'] = 'video%i'%(ix)
         return data
 

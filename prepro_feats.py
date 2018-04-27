@@ -9,7 +9,6 @@ import argparse
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 import pretrainedmodels
 from pretrainedmodels import utils
 
@@ -55,8 +54,9 @@ def extract_feats(params, model, load_image_fn):
         for iImg in range(len(image_list)):
             img = load_image_fn(image_list[iImg])
             images[iImg] = img
-        fc_feats = model(Variable(images, volatile=True).cuda()).squeeze()
-        img_feats = fc_feats.data.cpu().numpy()
+        with torch.no_grad():
+            fc_feats = model(images.cuda()).squeeze()
+        img_feats = fc_feats.cpu().numpy()
         # Save the inception features
         outfile = os.path.join(dir_fc, video_id + '.npy')
         np.save(outfile, img_feats)
@@ -77,9 +77,7 @@ if __name__ == '__main__':
                         default='data/train-video', help='path to video dataset')
     parser.add_argument("--model", dest="model", type=str, default='resnet152',
                         help='the CNN model you want to use to extract_feats')
-    parser.add_argument("--saved_model", dest="saved_model", type=str, default='',
-                        help='the pretrained CNN model you want to use to extract_feats')
-
+    
     args = parser.parse_args()
     os.environ['CUDA_VISIBLE_DEVICES'] = args.gpu
     params = vars(args)
@@ -104,7 +102,6 @@ if __name__ == '__main__':
 
     model.last_linear = utils.Identity()
     model = nn.DataParallel(model)
-    if params['saved_model'] != '':
-        model.load_state_dict(torch.load(params['saved_model']), strict=False)
+    
     model = model.cuda()
     extract_feats(params, model, load_image_fn)

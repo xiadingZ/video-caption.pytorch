@@ -37,15 +37,15 @@ def test(model, crit, dataset, vocab, opt):
     samples = {}
     for data in loader:
         # forward the model to get loss
-        fc_feats = Variable(data['fc_feats'], volatile=True).cuda()
-        labels = Variable(data['labels'], volatile=True).long().cuda()
-        masks = Variable(data['masks'], volatile=True).cuda()
+        fc_feats = data['fc_feats'].cuda()
+        labels = data['labels'].cuda()
+        masks = data['masks'].cuda()
         video_ids = data['video_ids']
       
         # forward the model to also get generated samples for each image
-        seq_probs, seq_preds = model(
-            fc_feats, mode='inference', opt=opt)
-        print(seq_preds)
+        with torch.no_grad():
+            seq_probs, seq_preds = model(
+                fc_feats, mode='inference', opt=opt)
 
         sents = utils.decode_sequence(vocab, seq_preds)
 
@@ -83,7 +83,7 @@ def main(opt):
                              input_dropout_p=opt["input_dropout_p"],
                              rnn_dropout_p=opt["rnn_dropout_p"], bidirectional=opt["bidirectional"])
         model = S2VTAttModel(encoder, decoder).cuda()
-    model = nn.DataParallel(model)
+    #model = nn.DataParallel(model)
     # Setup the model
     model.load_state_dict(torch.load(opt["saved_model"]))
     crit = utils.LanguageModelCriterion()
