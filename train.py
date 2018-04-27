@@ -48,7 +48,7 @@ def train(loader, model, crit, optimizer, lr_scheduler, opt, rl_crit=None):
                                torch.from_numpy(reward).float().cuda())
 
             loss.backward()
-            #utils.clip_gradient(optimizer, opt["grad_clip"])
+            utils.clip_gradient(optimizer, opt["grad_clip"])
             optimizer.step()
             train_loss = loss.item()
             torch.cuda.synchronize()
