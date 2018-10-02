@@ -36,6 +36,9 @@ UPDATE: MSR-VTT. Test video have released captions. You can download the all cap
 
 all default options are defined in opt.py or corresponding code file, change them for your like.
 
+## Acknowledgements
+Some code refers to [ImageCaptioning.pytorch](Acknowledgements)
+
 ## Usage
 
 ### (Optional) c3d features
@@ -93,3 +96,6 @@ I fork the [coco-caption XgDuan](https://github.com/XgDuan/coco-caption/tree/pyt
 
 ## Note
 You can see my another repository [video-caption-openNMT.py](https://github.com/xiadingZ/video-caption-openNMT.pytorch). It has higher performence and test score.
+
+## Acknowledgements
+Some code refers to [ImageCaptioning.pytorch](https://github.com/ruotianluo/ImageCaptioning.pytorch)
