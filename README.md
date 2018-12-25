@@ -65,7 +65,7 @@ python eval.py --recover_opt data/save/opt_info.json --saved_model data/save/mod
 
 ## TODO
 - lstm
-- beam search(you can refer to [Sundrops/video-caption.pytorch](https://github.com/Sundrops/video-caption.pytorch) )
+- beam search
 - reinforcement learning
 - dataparallel (broken in pytorch 0.4)
 
