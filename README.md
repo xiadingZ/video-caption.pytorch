@@ -31,7 +31,7 @@ MSR-VTT. Test video doesn't have captions, so I spilit train-viedo to train/val/
 all default options are defined in opt.py or corresponding code file, change them for your like.
 
 ## Acknowledgements
-Some code refers to [ImageCaptioning.pytorch](Acknowledgements)
+Some code refers to [ImageCaptioning.pytorch](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/03-advanced/image_captioning)
 
 ## Usage
 
